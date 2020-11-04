@@ -31,10 +31,10 @@ if __name__=='__main__':
     from loadData import *
     dataSet = d_apyori_cookDataSet()
     dataSet.quickStart(fileName='test9_11.csv', haveHeader=True)
-    ret_dataSet_brute=stepDiffusion(dataSet.n_data,[1,3,1],[[-0.1,0,0.1],]*len(dataSet.n_data[0]),mode='brute')
+    ret_dataSet_brute=stepDiffusion(dataSet.d_data,[1,3,1],[[-0.1,0,0.1],]*len(dataSet.n_data[0]),mode='brute')
     #for i in ret_dataSet_brute:
     #    print(i)
 
-    ret_dataSet_weight=stepDiffusion(dataSet.n_data,[1,3,1],[[-0.1,0,0.1],]*len(dataSet.n_data[0]),mode='weight')
+    ret_dataSet_weight=stepDiffusion(dataSet.d_data,[1,3,1],[[-0.1,0,0.1],]*len(dataSet.n_data[0]),mode='weight')
     for i in ret_dataSet_weight:
         print(i)
