@@ -115,6 +115,19 @@ class Fp_growth():
             cond_tree, cur_headtable = self.create_fptree(cond_pat_dataset, min_support)
             if cur_headtable != None:
                 self.create_cond_fptree(cur_headtable, min_support, freq_set, freq_items, support_data)  # 递归挖掘条件FP树
+    def supportCalculator(self,data_set,rule_list):
+        """:argument
+            item in rule_list [pre_set,sub_set,conf,support]
+            """
+
+        rl=[list(l) for l in rule_list]
+
+        for d in data_set:
+            for r in range(len(rl)):
+                if(frozenset([x for x in rl[r][0]]+[x for x in rl[r][1]]).issubset(d)):
+                    rl[r][3]=rl[r][3]+1
+        return rl
+
 
     def generate_L(self, data_set, min_support):
         freqItemSet = set()
@@ -143,19 +156,20 @@ class Fp_growth():
                     if sub_set.issubset(
                             freq_set) and freq_set - sub_set in support_data:  # and freq_set-sub_set in support_data
                         conf = support_data[freq_set] / support_data[freq_set - sub_set]
-                        big_rule = (freq_set - sub_set, sub_set, conf)
+                        big_rule = (freq_set - sub_set, sub_set, conf,0)
                         if conf >= min_conf and big_rule not in rule_list:
                             # print freq_set-sub_set, " => ", sub_set, "conf: ", conf
                             rule_list.append(big_rule)
                 sub_set_list.append(freq_set)
+        rule_list=self.supportCalculator(data_set,rule_list)
         rule_list = sorted(rule_list, key=lambda x: (x[2]), reverse=True)
         return rule_list
 
 
 if __name__ == "__main__":
 
-    min_support = 2  # 最小支持度
-    min_conf = 0.1  # 最小置信度
+    min_support = 15  # 最小支持度
+    min_conf = 0.7  # 最小置信度
 
     from step_mode import *
     from loadData import *
@@ -165,4 +179,5 @@ if __name__ == "__main__":
     dataSet=[[round(x, 2) for x in row] for row in dataSet]
     fp = Fp_growth()
     rule_list = fp.generate_R(dataSet[0:1000], min_support, min_conf)
-    #print(rule_list)
+    for i in rule_list:
+        print(i)
