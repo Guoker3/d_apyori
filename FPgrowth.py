@@ -154,8 +154,8 @@ class Fp_growth():
 
 if __name__ == "__main__":
 
-    min_support = 25  # 最小支持度
-    min_conf = 0.7  # 最小置信度
+    min_support = 2  # 最小支持度
+    min_conf = 0.1  # 最小置信度
 
     from step_mode import *
     from loadData import *

@@ -45,6 +45,10 @@ class d_apyori_cookDataSet:
             raise TypeError('unknown kind of files')
 
     def normalization(self):
+        """:argument
+            normalize the dataset and save the information of the normalize-process in (n_inf_min and n_inf_range)\
+            raw = norm * range + min
+        """
         if self.r_data == None:
             raise Exception('raw data have not loaded')
         if self.header == None:
@@ -68,6 +72,9 @@ class d_apyori_cookDataSet:
         print('data normalized')
 
     def division(self):
+        """:argument
+                make data of different attribute can be recognized by the algorithm (by add a tid-interval)
+        """
         if self.n_data == None:
             raise Exception('have no data set normalized')
         if self.header == None:
