@@ -186,6 +186,10 @@ class Fp_growth():
         {"nodename":[num,node],..} 根据node.nodelink可以找到整个树中的所有nodename
         '''
         item_count = {}  # 统计各项出现次数
+        #for i in data_set:
+        #    if type(i[0]) != type([1,2]):
+        #        print(i)
+
         for t in data_set:  # 第一次遍历，得到频繁一项集
             for item in t[0]:
                 if item not in item_count:
@@ -202,7 +206,9 @@ class Fp_growth():
             return None, None
         for k in headerTable:
             headerTable[k] = [headerTable[k], None]  # element: [count, node]
+
         tree_header = Node('head node', 1, None)
+
         ite = data_set
         for t in ite:  # 第二次遍历，建树
             localD = {}
@@ -220,7 +226,8 @@ class Fp_growth():
         '''
         根据节点名字，找出所有条件模式基
         '''
-        treeNode = headerTable[node_name][1]
+
+        treeNode = headerTable[list(node_name)[0]][1]
         cond_pat_base = {}  # 保存所有条件模式基
         while treeNode != None:
             nodepath = []
@@ -228,6 +235,7 @@ class Fp_growth():
             if len(nodepath) > 1:
                 cond_pat_base[frozenset(nodepath[:-1])] = treeNode.count
             treeNode = treeNode.nodeLink
+        print(cond_pat_base)
         return cond_pat_base
 
     def create_cond_fptree_weight(self, headerTable, min_support, temp, freq_items, support_data):
@@ -237,25 +245,26 @@ class Fp_growth():
         # 最开始的频繁项集是headerTable中的各元素
         freqs = [v for v in sorted(headerTable.items(), key=lambda p: p[1][0])]  # 根据频繁项的总频次排序
         for i in range(len(freqs)):
-            freqs[i]=[freqs[i][0],freqs[i][1][0]]
+            freqs[i]=frozenset([freqs[i][0],freqs[i][1][0]])
         #for a in freqs:
         #    print(a)
         for freq in freqs:  # 对每个频繁项
             freq_set = temp.copy()
             freq_set.add(freq)
-            freq_items.add(frozenset(freq_set))
+            freq_items.add(frozenset(freq_set))                     ##TODO(main) rewrite the frozenset to make it ordered and repeat-able
             if frozenset(freq_set) not in support_data:  # 检查该频繁项是否在support_data中
-                support_data[frozenset(freq_set)] = headerTable[freq][0]
+                support_data[frozenset(freq_set)] = headerTable[list(freq)[0]][0]
             else:
-                support_data[frozenset(freq_set)] += headerTable[freq][0]
+                support_data[frozenset(freq_set)] += headerTable[list(freq)[0]][0]
 
             cond_pat_base = self.find_cond_pattern_base(freq, headerTable)  # 寻找到所有条件模式基 ##TODO(next) make support return together
             cond_pat_dataset = []  # 将条件模式基字典转化为数组
-            for item in cond_pat_base:
-                item_temp = list(item)
+            for item in cond_pat_base.items():
+                item_temp = list(item[0])
                 item_temp.sort()
-                for i in range(cond_pat_base[item]):
-                    cond_pat_dataset.append(item_temp)
+                for i in range(cond_pat_base[item[0]]):
+                    cond_pat_dataset.append([item_temp,item[1]])
+
             # 创建条件模式树
             cond_tree, cur_headtable = self.create_fptree_weight(cond_pat_dataset, min_support)
             if cur_headtable != None:
