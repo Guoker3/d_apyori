@@ -12,6 +12,9 @@ class Node:
 
 
 class Fp_growth():
+    def __init__(self, Mode):
+        self.mode = Mode
+
     def update_header(self, node, targetNode):  # 更新headertable中的node节点形成的链表
         while node.nodeLink != None:
             node = node.nodeLink
@@ -115,19 +118,18 @@ class Fp_growth():
             cond_tree, cur_headtable = self.create_fptree(cond_pat_dataset, min_support)
             if cur_headtable != None:
                 self.create_cond_fptree(cur_headtable, min_support, freq_set, freq_items, support_data)  # 递归挖掘条件FP树
-    def supportCalculator(self,data_set,rule_list):
+
+    def supportCalculator(self, rule_list, supportData):
         """:argument
             item in rule_list [pre_set,sub_set,conf,support]
             """
 
-        rl=[list(l) for l in rule_list]
+        rl = [list(l) for l in rule_list]
 
-        for d in data_set:
-            for r in range(len(rl)):
-                if(frozenset([x for x in rl[r][0]]+[x for x in rl[r][1]]).issubset(d)):
-                    rl[r][3]=rl[r][3]+1
+        for r in range(len(rl)):
+            rl[r].append(supportData[rl[r][0]])
+
         return rl
-
 
     def generate_L(self, data_set, min_support):
         freqItemSet = set()
@@ -144,6 +146,8 @@ class Fp_growth():
             L[len(i) - 1].add(i)
         for i in range(len(L)):
             print("frequent item {}:{}".format(i + 1, len(L[i])))
+        print('L:',L)
+        print('S:',support_data)
         return L, support_data
 
     def generate_R(self, data_set, min_support, min_conf):
@@ -156,28 +160,43 @@ class Fp_growth():
                     if sub_set.issubset(
                             freq_set) and freq_set - sub_set in support_data:  # and freq_set-sub_set in support_data
                         conf = support_data[freq_set] / support_data[freq_set - sub_set]
-                        big_rule = (freq_set - sub_set, sub_set, conf,0)
+                        big_rule = (freq_set - sub_set, sub_set, conf, 0)
                         if conf >= min_conf and big_rule not in rule_list:
                             # print freq_set-sub_set, " => ", sub_set, "conf: ", conf
                             rule_list.append(big_rule)
                 sub_set_list.append(freq_set)
-        rule_list=self.supportCalculator(data_set,rule_list)
+        rule_list = self.supportCalculator(rule_list,support_data)
         rule_list = sorted(rule_list, key=lambda x: (x[2]), reverse=True)
         return rule_list
 
 
 if __name__ == "__main__":
 
-    min_support = 15  # 最小支持度
+    min_support = 3  # 最小支持度
     min_conf = 0.7  # 最小置信度
 
     from step_mode import *
     from loadData import *
+
     dataSet = d_apyori_cookDataSet()
     dataSet.quickStart(fileName='test9_11.csv', haveHeader=True)
-    dataSet = stepDiffusion(dataSet.d_data, [1, 3, 1], [[-0.1, 0, 0.1], ] * len(dataSet.n_data[0]),mode='brute')
-    dataSet=[[round(x, 2) for x in row] for row in dataSet]
-    fp = Fp_growth()
-    rule_list = fp.generate_R(dataSet[0:1000], min_support, min_conf)
-    for i in rule_list:
-        print(i)
+
+    dif_list = [1, 3, 1]
+    new_min_support = int(min_support * sum(dif_list))
+
+    mode = 'weight'
+    if mode == 'brute':
+        dataSet = stepDiffusion(dataSet.d_data, dif_list, [[-0.1, 0, 0.1], ] * len(dataSet.n_data[0]), mode='brute')
+        dataSet = [[round(x, 2) for x in row] for row in dataSet]
+        fp = Fp_growth(Mode='brute')
+        rule_list = fp.generate_R(dataSet[0:1000], new_min_support, min_conf)
+        for i in rule_list:
+            print(i)
+
+    if mode == 'weight':
+        dataSet = stepDiffusion(dataSet.d_data, dif_list, [[-0.1, 0, 0.1], ] * len(dataSet.n_data[0]), mode='brute')
+        dataSet = [[round(x, 2) for x in row] for row in dataSet]
+        fp = Fp_growth(Mode='weight')
+        rule_list = fp.generate_R(dataSet[0:1000], new_min_support, min_conf)
+        for i in rule_list:
+            print(i)
