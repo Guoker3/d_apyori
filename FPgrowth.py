@@ -187,11 +187,11 @@ class Fp_growth():
         '''
         item_count = {}  # 统计各项出现次数
         for t in data_set:  # 第一次遍历，得到频繁一项集
-            for item in t:
+            for item in t[0]:
                 if item not in item_count:
-                    item_count[item] = 1
+                    item_count[item] = t[1]
                 else:
-                    item_count[item] += 1
+                    item_count[item] += t[1]
         headerTable = {}
         for k in item_count:  # 剔除不满足最小支持度的项
             if item_count[k] >= min_support:
@@ -206,7 +206,7 @@ class Fp_growth():
         ite = data_set
         for t in ite:  # 第二次遍历，建树
             localD = {}
-            for item in t:
+            for item in t[0]:
                 if item in freqItemSet:  # 过滤，只取该样本中满足最小支持度的频繁项
                     localD[item] = headerTable[item][0]  # element : count
             if len(localD) > 0:
@@ -231,8 +231,15 @@ class Fp_growth():
         return cond_pat_base
 
     def create_cond_fptree_weight(self, headerTable, min_support, temp, freq_items, support_data):
+        """:param
+                headerTable:dictionary of the "(39.6, [18, <__main__.Node object at 0x000001B355482DC8>])"
+        """
         # 最开始的频繁项集是headerTable中的各元素
-        freqs = [v[0] for v in sorted(headerTable.items(), key=lambda p: p[1][0])]  # 根据频繁项的总频次排序
+        freqs = [v for v in sorted(headerTable.items(), key=lambda p: p[1][0])]  # 根据频繁项的总频次排序
+        for i in range(len(freqs)):
+            freqs[i]=[freqs[i][0],freqs[i][1][0]]
+        #for a in freqs:
+        #    print(a)
         for freq in freqs:  # 对每个频繁项
             freq_set = temp.copy()
             freq_set.add(freq)
@@ -242,7 +249,7 @@ class Fp_growth():
             else:
                 support_data[frozenset(freq_set)] += headerTable[freq][0]
 
-            cond_pat_base = self.find_cond_pattern_base(freq, headerTable)  # 寻找到所有条件模式基
+            cond_pat_base = self.find_cond_pattern_base(freq, headerTable)  # 寻找到所有条件模式基 ##TODO(next) make support return together
             cond_pat_dataset = []  # 将条件模式基字典转化为数组
             for item in cond_pat_base:
                 item_temp = list(item)
@@ -250,16 +257,17 @@ class Fp_growth():
                 for i in range(cond_pat_base[item]):
                     cond_pat_dataset.append(item_temp)
             # 创建条件模式树
-            cond_tree, cur_headtable = self.create_fptree(cond_pat_dataset, min_support)
+            cond_tree, cur_headtable = self.create_fptree_weight(cond_pat_dataset, min_support)
             if cur_headtable != None:
-                self.create_cond_fptree_brute(cur_headtable, min_support, freq_set, freq_items, support_data)  # 递归挖掘条件FP树
+                self.create_cond_fptree_weight(cur_headtable, min_support, freq_set, freq_items, support_data)  # 递归挖掘条件FP树
 
     def generate_L_weight(self, data_set, min_support):
         freqItemSet = set()
         support_data = {}
         tree_header, headerTable = self.create_fptree(data_set, min_support, flag=True)  # 创建数据集的fptree
+
         # 创建各频繁一项的fptree，并挖掘频繁项并保存支持度计数
-        self.create_cond_fptree_brute(headerTable, min_support, set(), freqItemSet, support_data)
+        self.create_cond_fptree_weight(headerTable, min_support, set(), freqItemSet, support_data)
 
         max_l = 0
         for i in freqItemSet:  # 将频繁项根据大小保存到指定的容器L中
@@ -269,13 +277,15 @@ class Fp_growth():
             L[len(i) - 1].add(i)
         for i in range(len(L)):
             print("frequent item {}:{}".format(i + 1, len(L[i])))
-        #print('L:',L)
-        #print('S:',support_data)
         return L, support_data
 
     def generate_R_weight(self, data_set, min_support, min_conf):
+        """:param:
+                L : list of frequent items' set
+                support_data : dictionary about {frequent set : support counts}
+        """
         L, support_data = self.generate_L(data_set, min_support)
-        print('L',L)
+
         rule_list = []
         sub_set_list = []
         for i in range(0, len(L)):
@@ -320,9 +330,10 @@ if __name__ == "__main__":
         #    print(i)
 
     if mode == 'weight':
-        dataSet = stepDiffusion(dataSet.d_data, dif_list, [[-0.1, 0, 0.1], ] * len(dataSet.n_data[0]), mode='brute')
-        dataSet = [[round(x, 2) for x in row] for row in dataSet]
+        dataSet = stepDiffusion(dataSet.d_data, dif_list, [[-0.1, 0, 0.1], ] * len(dataSet.n_data[0]), mode='weight')
+        for r in range(len(dataSet)):
+            dataSet[r][0] = [round(x,2) for x in dataSet[r][0]]
         fp = Fp_growth(Mode='weight')
         rule_list = fp.generate_R(dataSet[0:1000], new_min_support, min_conf)
-        for i in rule_list:
-            print(i)
+        #for i in rule_list:
+        #    print(i)

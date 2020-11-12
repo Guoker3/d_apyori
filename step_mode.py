@@ -24,7 +24,9 @@ def stepDiffusion(d_dataSet,diffusion_t,diffusion_d,mode='weight'):
     if mode=='weight':
         for record in d_dataSet:
             for dd in range(len(diffusion_t)):
-                record_t = [x + y[dd] for x in record for y in diffusion_d]
+                record_t=[]
+                for x in range(len(record)):
+                    record_t.append(record[x]+diffusion_d[x][dd])
                 ret_dataSet.append([record_t,diffusion_t[dd]])
         print('weight diffused')
         return ret_dataSet
