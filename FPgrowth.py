@@ -212,20 +212,20 @@ class Fp_growth():
         item_count = {}  # 统计各项出现次数
         #for i in data_set:
             #if type(i[0]) != type([1,2]):
-            #print(i)
-
+        #    print(i)
         for t in data_set:  # 第一次遍历，得到频繁一项集
             for item in t[0]:
                 #print(item)
                 if item not in item_count:
                     item_count[item] = t[1]
                 else:
-                    item_count[item] += t[1]
+                    item_count[item] = item_count[item] + t[1]
         headerTable = {}
         for k in item_count:  # 剔除不满足最小支持度的项
             if item_count[k] >= min_support:
                 headerTable[k] = item_count[k]
-                #print('k:',k)
+        #    print('k:',type(k))
+        #input()
         freqItemSet = set(headerTable.keys())  # 满足最小支持度的频繁项集
         if len(freqItemSet) == 0:
             return None, None
@@ -265,7 +265,15 @@ class Fp_growth():
             nodepath = []
             self.find_path(treeNode, nodepath)
             if len(nodepath) > 1:
-                cond_pat_base[frozenset(nodepath[:-1])] = treeNode.count
+                nodepath_tmp=[]
+                for i in nodepath[:-1]:
+                    ii=list(i)
+                    if type(ii[0])==type(str()):
+                        nodepath_tmp.append(ii[0])
+                    else:
+                        nodepath_tmp.append(ii[1])
+
+                cond_pat_base[frozenset(nodepath_tmp)] = treeNode.count
             treeNode = treeNode.nodeLink
         #print(cond_pat_base)
         return cond_pat_base
@@ -284,7 +292,9 @@ class Fp_growth():
             #print('i:',freqs[i])
 
         #for a in support_data.items():
+        #for a in freqs:
         #    print('s:',a)
+        #input()
         for freq in freqs:  # 对每个频繁项
             freq_set = temp.copy()
             freq_set.add(freq)
@@ -326,6 +336,8 @@ class Fp_growth():
             # 创建条件模式树
             cond_tree, cur_headtable = self.create_fptree_weight(cond_pat_dataset, min_support)
             if cur_headtable != None:
+                #print(cur_headtable)
+                #input()
                 self.create_cond_fptree_weight(cur_headtable, min_support, freq_set, freq_items, support_data)  # 递归挖掘条件FP树
 
     def generate_L_weight(self, data_set, min_support):
@@ -353,7 +365,7 @@ class Fp_growth():
         """
         L, support_data = self.generate_L(data_set, min_support)
         #print('L:',L)
-        #for i in support_data:
+        #for i in support_data.items():
         #    print('S:',i)
         rule_list = []
         sub_set_list = []
