@@ -227,8 +227,11 @@ class Fp_growth():
         '''
         根据节点名字，找出所有条件模式基
         '''
-
-        treeNode = headerTable[list(node_name)[0]][1]
+        if type(list(node_name)[0])==type(str()):
+            tmp=list(node_name)[0]
+        else:
+            tmp=list(node_name)[1]
+        treeNode = headerTable[tmp][1]
         cond_pat_base = {}  # 保存所有条件模式基
         while treeNode != None:
             nodepath = []
@@ -241,15 +244,15 @@ class Fp_growth():
 
     def create_cond_fptree_weight(self, headerTable, min_support, temp, freq_items, support_data):
         """:param
-                headerTable:dictionary of the "(39.6, [18, <__main__.Node object at 0x000001B355482DC8>])"
+                headerTable:dictionary of the "('39.6', [18, <__main__.Node object at 0x000001B355482DC8>])"
         """
         # 最开始的频繁项集是headerTable中的各元素
         freqs = [v for v in sorted(headerTable.items(), key=lambda p: p[1][0])]  # 根据频繁项的总频次排序
         for i in range(len(freqs)):
             freqs[i]=frozenset([freqs[i][0],freqs[i][1][0]])
 
-        #for a in freqs:
-        #    print(a)
+        #for a in support_data.items():
+        #    print('s:',a)
         for freq in freqs:  # 对每个频繁项
             freq_set = temp.copy()
             freq_set.add(freq)
@@ -262,8 +265,10 @@ class Fp_growth():
                 tmp = list(freq)[1]
 
             if frozenset(freq_set) not in support_data:  # 检查该频繁项是否在support_data中
+                #print(freq_set)
                 support_data[frozenset(freq_set)] = headerTable[tmp][0]
             else:
+                #print(freq_set)
                 support_data[frozenset(freq_set)] += headerTable[list(freq)[0]][0]
 
             cond_pat_base = self.find_cond_pattern_base(freq, headerTable)  # 寻找到所有条件模式基 ##TODO(next) make support return together
@@ -283,7 +288,8 @@ class Fp_growth():
         freqItemSet = set()
         support_data = {}
         tree_header, headerTable = self.create_fptree(data_set, min_support, flag=True)  # 创建数据集的fptree
-
+        #print('T:',tree_header)
+        #print('H:',headerTable)
         # 创建各频繁一项的fptree，并挖掘频繁项并保存支持度计数
         self.create_cond_fptree_weight(headerTable, min_support, set(), freqItemSet, support_data)
 
@@ -303,7 +309,9 @@ class Fp_growth():
                 support_data : dictionary about {frequent set : support counts}
         """
         L, support_data = self.generate_L(data_set, min_support)
-
+        #print('L:',L)
+        #for i in support_data:
+        #    print('S:',i)
         rule_list = []
         sub_set_list = []
         for i in range(0, len(L)):
@@ -316,6 +324,18 @@ class Fp_growth():
                         if conf >= min_conf and big_rule not in rule_list:
                             # print freq_set-sub_set, " => ", sub_set, "conf: ", conf
                             rule_list.append(big_rule)
+                    else:
+                        #print('sub_set:',sub_set)
+                        #print('freq_set:',freq_set)
+                        #print(freq_set-sub_set)
+                        #print('1:',sub_set.issubset(freq_set))
+                        #print('2:',freq_set-sub_set in support_data)
+                        if sub_set.issubset(freq_set):
+                        #    print(freq_set in support_data)
+                        #    print('sub_set:',sub_set)
+                        #    print('freq_set:',freq_set)
+                        #    print(freq_set-sub_set)
+                        #    print(support_data)
                 sub_set_list.append(freq_set)
         rule_list = self.supportCalculator(rule_list,support_data)
         rule_list = sorted(rule_list, key=lambda x: (x[2]), reverse=True)
@@ -325,7 +345,7 @@ class Fp_growth():
 if __name__ == "__main__":
 
     min_support = 3  # 最小支持度
-    min_conf = 0.7  # 最小置信度
+    min_conf = 0  # 最小置信度
     ##TODO(fyt) estimate the min_conf relationship
 
     from step_mode import *
@@ -353,5 +373,5 @@ if __name__ == "__main__":
             dataSet[r][0] = [str(round(x,2)) for x in dataSet[r][0]]
         fp = Fp_growth(Mode='weight')
         rule_list = fp.generate_R(dataSet[0:1000], new_min_support, min_conf)
-        #for i in rule_list:
-        #    print(i)
+        for i in rule_list:
+            print(i)
