@@ -2,6 +2,7 @@ import os
 import time
 
 
+
 class Node:
     def __init__(self, node_name, count, parentNode):
         self.name = node_name
@@ -235,7 +236,7 @@ class Fp_growth():
             if len(nodepath) > 1:
                 cond_pat_base[frozenset(nodepath[:-1])] = treeNode.count
             treeNode = treeNode.nodeLink
-        print(cond_pat_base)
+        #print(cond_pat_base)
         return cond_pat_base
 
     def create_cond_fptree_weight(self, headerTable, min_support, temp, freq_items, support_data):
@@ -246,14 +247,22 @@ class Fp_growth():
         freqs = [v for v in sorted(headerTable.items(), key=lambda p: p[1][0])]  # 根据频繁项的总频次排序
         for i in range(len(freqs)):
             freqs[i]=frozenset([freqs[i][0],freqs[i][1][0]])
+
         #for a in freqs:
         #    print(a)
         for freq in freqs:  # 对每个频繁项
             freq_set = temp.copy()
             freq_set.add(freq)
-            freq_items.add(frozenset(freq_set))                     ##TODO(main) rewrite the frozenset to make it ordered and repeat-able
+            freq_items.add(frozenset(freq_set))
+            ##TODO(main) rewrite the frozenset to make it ordered and repeat-able OR make list to str for hash
+
+            if type(list(freq)[0]) == type(str()):
+                tmp = list(freq)[0]
+            else:
+                tmp = list(freq)[1]
+
             if frozenset(freq_set) not in support_data:  # 检查该频繁项是否在support_data中
-                support_data[frozenset(freq_set)] = headerTable[list(freq)[0]][0]
+                support_data[frozenset(freq_set)] = headerTable[tmp][0]
             else:
                 support_data[frozenset(freq_set)] += headerTable[list(freq)[0]][0]
 
@@ -341,7 +350,7 @@ if __name__ == "__main__":
     if mode == 'weight':
         dataSet = stepDiffusion(dataSet.d_data, dif_list, [[-0.1, 0, 0.1], ] * len(dataSet.n_data[0]), mode='weight')
         for r in range(len(dataSet)):
-            dataSet[r][0] = [round(x,2) for x in dataSet[r][0]]
+            dataSet[r][0] = [str(round(x,2)) for x in dataSet[r][0]]
         fp = Fp_growth(Mode='weight')
         rule_list = fp.generate_R(dataSet[0:1000], new_min_support, min_conf)
         #for i in rule_list:
