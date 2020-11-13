@@ -185,14 +185,20 @@ class Fp_growth():
 
         #for i in headerTable:
         #    print(i)
-
+        if type(items[0][0]) == type(str()):
+            c_tmp=items[0][1]
+        else:
+            c_tmp=items[0][0]
+        #print(items)
+        #input()
         f_items=frozenset(items[0])
-        if frozenset(f_items) in node.children:
+
+        if f_items in node.children:
             # 判断items的第一个结点是否已作为子结点
-            node.children[f_items].count += 1
+            node.children[f_items].count = node.children[f_items].count+c_tmp
         else:
             # 创建新的分支
-            node.children[f_items] = Node(f_items, 1, node)
+            node.children[f_items] = Node(f_items, c_tmp, node)
             # 更新相应频繁项集的链表，往后添加
             tmp=items[0][0]
             if headerTable[tmp][1] == None:
@@ -214,6 +220,7 @@ class Fp_growth():
             #if type(i[0]) != type([1,2]):
         #    print(i)
         for t in data_set:  # 第一次遍历，得到频繁一项集
+            #print('t',t)
             for item in t[0]:
                 #print(item)
                 if item not in item_count:
@@ -222,6 +229,8 @@ class Fp_growth():
                     item_count[item] = item_count[item] + t[1]
         headerTable = {}
         for k in item_count:  # 剔除不满足最小支持度的项
+            #print(type(item_count[k]))
+
             if item_count[k] >= min_support:
                 headerTable[k] = item_count[k]
         #    print('k:',type(k))
@@ -242,11 +251,11 @@ class Fp_growth():
                     localD[item] = headerTable[item][0]  # element : count
             if len(localD) > 0:
                 # 根据全局频数从大到小对单样本排序
-                order_item = [list(v) for v in sorted(localD.items(), key=lambda x: x[1], reverse=True)]
-
+                order_item = [v for v in sorted(localD.items(), key=lambda x: x[1], reverse=True)]
+                #print(order_item)
                 #for i in order_item:
                 #   print(i)
-
+                #input()
                 # 用过滤且排序后的样本更新树
                 self.update_fptree_weight(order_item, tree_header, headerTable)
         return tree_header, headerTable
@@ -328,9 +337,10 @@ class Fp_growth():
                 item_temp = list(item[0])
                 #print('item_temp:',item_temp)
                 item_temp.sort()
+                #print(item)
                 cond_pat_dataset.append([item_temp,item[1]])
             #for i in cond_pat_dataset:
-            #    print(':::',i)
+                #print(':::',i)
             # 创建条件模式树
             cond_tree, cur_headtable = self.create_fptree_weight(cond_pat_dataset, min_support)
             if cur_headtable != None:
@@ -376,7 +386,7 @@ class Fp_growth():
                     if sub_set.issubset(
                             freq_set) and freq_set - sub_set in support_data:  # and freq_set-sub_set in support_data
                         conf = support_data[freq_set] / support_data[freq_set - sub_set]
-                        big_rule = (freq_set - sub_set, sub_set, conf, 0)
+                        big_rule = (freq_set - sub_set, sub_set, conf)
                         if conf >= min_conf and big_rule not in rule_list:
                             # print freq_set-sub_set, " => ", sub_set, "conf: ", conf
                             rule_list.append(big_rule)
@@ -408,30 +418,38 @@ if __name__ == "__main__":
     from loadData import *
 
     dataSet = d_apyori_cookDataSet()
-    #dataSet.quickStart(fileName='test9_11.csv', haveHeader=True)
-    easyDataSet=[[0.1,0.2,0.3],[0.1,0.2,0.4],[0.2,0.3,0.5],[0.1,0.2,0.5]]
-    dataSet.quickStart(fileName=easyDataSet,haveHeader=False)
 
-    #dif_list = [1, 3, 1]
-    #new_min_support = int(min_support * sum(dif_list))
-    dif_list=[1,]
-    new_min_support = 2
+    dataChoice='luntai'
 
-    mode = 'weight'
+    if dataChoice=='luntai':
+        dataSet.quickStart(fileName='test9_11.csv', haveHeader=True)
+        dif_list = [1, 3, 1]
+        new_min_support = int(min_support * sum(dif_list))
+
+    if dataChoice=='small':
+        easyDataSet=[[0.1,0.2,0.3],[0.1,0.2,0.4],[0.2,0.3,0.5],[0.1,0.2,0.5],[0,0,0],[1,1,1]]
+        dataSet.quickStart(fileName=easyDataSet,haveHeader=False)
+        dif_list=[1,4,1]
+        new_min_support = 1
+
+    #mode = 'weight'
+    mode = 'brute'
 
     if mode == 'brute':
         dataSet = stepDiffusion(dataSet.d_data, dif_list, [[-0.1, 0, 0.1], ] * len(dataSet.n_data[0]), mode='brute')
-        dataSet = [[round(x, 2) for x in row] for row in dataSet]
+        dataSet = [[str(round(x, 2)) for x in row] for row in dataSet]
         fp = Fp_growth(Mode='brute')
-        rule_list = fp.generate_R(dataSet[0:1000], new_min_support, min_conf)
+        rule_list = fp.generate_R(dataSet[0:500], new_min_support, min_conf)
         #for i in rule_list:
         #    print(i)
+        print(len(rule_list))
 
     if mode == 'weight':
         dataSet = stepDiffusion(dataSet.d_data, dif_list, [[-0.1, 0, 0.1], ] * len(dataSet.n_data[0]), mode='weight')
         for r in range(len(dataSet)):
             dataSet[r][0] = [str(round(x,2)) for x in dataSet[r][0]]
         fp = Fp_growth(Mode='weight')
-        rule_list = fp.generate_R(dataSet[0:1000], new_min_support, min_conf)
+        rule_list = fp.generate_R(dataSet[0:100], new_min_support, min_conf)
         for i in rule_list:
-            print(i)
+            print('rule',i)
+        print(len(rule_list))
