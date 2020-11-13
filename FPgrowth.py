@@ -329,7 +329,7 @@ class Fp_growth():
                 support_data[frozenset(freq_set)] += headerTable[tmp][0]
                 #print(support_data[frozenset(freq_set)])
 
-            cond_pat_base = self.find_cond_pattern_base(freq, headerTable)  # 寻找到所有条件模式基 ##TODO(next) make support return together
+            cond_pat_base = self.find_cond_pattern_base(freq, headerTable)  # 寻找到所有条件模式基 ##TODO(done) make support return together
             #for i in cond_pat_base:
             #    print(i)
             cond_pat_dataset = []  # 将条件模式基字典转化为数组
@@ -409,7 +409,7 @@ class Fp_growth():
 
 
 if __name__ == "__main__":
-
+    ##TODO check why result differ between the brute and weight
     min_support = 3  # 最小支持度
     min_conf = 0  # 最小置信度
     ##TODO(fyt) estimate the min_conf relationship
@@ -419,7 +419,8 @@ if __name__ == "__main__":
 
     dataSet = d_apyori_cookDataSet()
 
-    dataChoice='luntai'
+    #dataChoice='luntai'
+    dataChoice='small'
 
     if dataChoice=='luntai':
         dataSet.quickStart(fileName='test9_11.csv', haveHeader=True)
@@ -427,13 +428,13 @@ if __name__ == "__main__":
         new_min_support = int(min_support * sum(dif_list))
 
     if dataChoice=='small':
-        easyDataSet=[[0.1,0.2,0.3],[0.1,0.2,0.4],[0.2,0.3,0.5],[0.1,0.2,0.5],[0,0,0],[1,1,1]]
+        easyDataSet=[[0,0,0],[1.5,1.5,1.5]]
         dataSet.quickStart(fileName=easyDataSet,haveHeader=False)
-        dif_list=[1,4,1]
+        dif_list=[100,2,0]
         new_min_support = 1
 
-    #mode = 'weight'
-    mode = 'brute'
+    mode = 'weight'
+    #mode = 'brute'
 
     if mode == 'brute':
         dataSet = stepDiffusion(dataSet.d_data, dif_list, [[-0.1, 0, 0.1], ] * len(dataSet.n_data[0]), mode='brute')
