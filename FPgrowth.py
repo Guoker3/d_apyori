@@ -275,7 +275,7 @@ class Fp_growth():
 
                 cond_pat_base[frozenset(nodepath_tmp)] = treeNode.count
             treeNode = treeNode.nodeLink
-        #print(cond_pat_base)
+        #print('cpd:',cond_pat_base)
         return cond_pat_base
 
     def create_cond_fptree_weight(self, headerTable, min_support, temp, freq_items, support_data):
@@ -327,10 +327,8 @@ class Fp_growth():
             for item in cond_pat_base.items():
                 item_temp = list(item[0])
                 #print('item_temp:',item_temp)
-                #item_temp.sort()           ##TODO(consider) tell if .sort work for
-                for i in range(cond_pat_base[item[0]]):
-                    cond_pat_dataset.append([item_temp,item[1]])
-
+                item_temp.sort()
+                cond_pat_dataset.append([item_temp,item[1]])
             #for i in cond_pat_dataset:
             #    print(':::',i)
             # 创建条件模式树
@@ -364,9 +362,11 @@ class Fp_growth():
                 support_data : dictionary about {frequent set : support counts}
         """
         L, support_data = self.generate_L(data_set, min_support)
+
         #print('L:',L)
         #for i in support_data.items():
         #    print('S:',i)
+
         rule_list = []
         sub_set_list = []
         for i in range(0, len(L)):
@@ -408,10 +408,14 @@ if __name__ == "__main__":
     from loadData import *
 
     dataSet = d_apyori_cookDataSet()
-    dataSet.quickStart(fileName='test9_11.csv', haveHeader=True)
+    #dataSet.quickStart(fileName='test9_11.csv', haveHeader=True)
+    easyDataSet=[[0.1,0.2,0.3],[0.1,0.2,0.4],[0.2,0.3,0.5],[0.1,0.2,0.5]]
+    dataSet.quickStart(fileName=easyDataSet,haveHeader=False)
 
-    dif_list = [1, 3, 1]
-    new_min_support = int(min_support * sum(dif_list))
+    #dif_list = [1, 3, 1]
+    #new_min_support = int(min_support * sum(dif_list))
+    dif_list=[1,]
+    new_min_support = 2
 
     mode = 'weight'
 

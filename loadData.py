@@ -38,6 +38,10 @@ class d_apyori_cookDataSet:
         print("csv loaded")
 
     def loadDataSet(self, fileName, haveHeader, myEncoding='utf-8'):
+        if type(fileName) == type(list()):
+            self.r_data = fileName
+            return
+
         self.fileName = fileName
         if fileName[-4:] == '.csv':
             self.__loadCSV(fileName, haveHeader=haveHeader, myEncoding=myEncoding)
