@@ -1,7 +1,7 @@
 import os
 import time
-
-
+from copy import deepcopy
+import pyfpgrowth
 
 class Node:
     def __init__(self, node_name, count, parentNode):
@@ -170,7 +170,7 @@ class Fp_growth():
                     if sub_set.issubset(
                             freq_set) and freq_set - sub_set in support_data:  # and freq_set-sub_set in support_data
                         conf = support_data[freq_set] / support_data[freq_set - sub_set]
-                        big_rule = (freq_set - sub_set, sub_set, conf, 0)
+                        big_rule = (freq_set - sub_set, sub_set, conf)
                         if conf >= min_conf and big_rule not in rule_list:
                             # print freq_set-sub_set, " => ", sub_set, "conf: ", conf
                             rule_list.append(big_rule)
@@ -410,7 +410,7 @@ class Fp_growth():
 
 if __name__ == "__main__":
     ##TODO check why result differ between the brute and weight
-    min_support = 3  # 最小支持度
+    min_support_param = 3  # 最小支持度
     min_conf = 0  # 最小置信度
     ##TODO(fyt) estimate the min_conf relationship
 
@@ -425,32 +425,48 @@ if __name__ == "__main__":
     if dataChoice=='luntai':
         dataSet.quickStart(fileName='test9_11.csv', haveHeader=True)
         dif_list = [1, 3, 1]
-        new_min_support = int(min_support * sum(dif_list))
+        dif_step=[[-0.1, 0, 0.1], ] * len(dataSet.n_data[0])
+        new_min_support = int(min_support_param * sum(dif_list))
 
     if dataChoice=='small':
-        easyDataSet=[[0,0,0],[1.5,1.5,1.5]]
+        easyDataSet=[[0,0,0],[1,1,1]]
         dataSet.quickStart(fileName=easyDataSet,haveHeader=False)
-        dif_list=[100,2,0]
+        dif_list=[1,]
+        #dif_step=[[-0.1, 0, 0.1], ] * len(dataSet.n_data[0])
+        dif_step = [[0,], ] * len(dataSet.n_data[0])
         new_min_support = 1
 
-    mode = 'weight'
-    #mode = 'brute'
+    #mode = 'weight'
+    mode = 'brute'
 
+    print('****************\n******************* brute ******************\n***************************')
     if mode == 'brute':
-        dataSet = stepDiffusion(dataSet.d_data, dif_list, [[-0.1, 0, 0.1], ] * len(dataSet.n_data[0]), mode='brute')
-        dataSet = [[str(round(x, 2)) for x in row] for row in dataSet]
+        dataSet_b = stepDiffusion(dataSet.d_data, dif_list, dif_step, mode='brute')
+        dataSet_b = [[str(round(x, 2)) for x in row] for row in dataSet_b]
         fp = Fp_growth(Mode='brute')
-        rule_list = fp.generate_R(dataSet[0:500], new_min_support, min_conf)
-        #for i in rule_list:
-        #    print(i)
-        print(len(rule_list))
+        rule_list = fp.generate_R(dataSet_b, new_min_support, min_conf)
+        for i in rule_list:
+            print(i)
+        print('number of results',len(rule_list))
 
+    #print('****************\n*******************weight******************\n***************************')
+    #mode ='weight'
     if mode == 'weight':
-        dataSet = stepDiffusion(dataSet.d_data, dif_list, [[-0.1, 0, 0.1], ] * len(dataSet.n_data[0]), mode='weight')
-        for r in range(len(dataSet)):
-            dataSet[r][0] = [str(round(x,2)) for x in dataSet[r][0]]
+        dataSet_w = stepDiffusion(dataSet.d_data, dif_list, dif_step, mode='weight')
+        for r in range(len(dataSet_w)):
+            dataSet_w[r][0] = [str(round(x,2)) for x in dataSet_w[r][0]]
         fp = Fp_growth(Mode='weight')
-        rule_list = fp.generate_R(dataSet[0:100], new_min_support, min_conf)
+        rule_list = fp.generate_R(dataSet_w, new_min_support, min_conf)
         for i in rule_list:
             print('rule',i)
-        print(len(rule_list))
+        print('number of results:',len(rule_list))
+"""
+    print('****************\n***************** pyfpgrowth ********************\n***************************')
+    mode = 'pyfpgrowth'
+    if mode == 'pyfpgrowth':
+        patterns = pyfpgrowth.find_frequent_patterns(dataSet_b, new_min_support)
+        rules = pyfpgrowth.generate_association_rules(patterns, min_conf)
+        for r in rules:
+            print(r)
+        print('number of results:', len(rules))
+"""

@@ -14,10 +14,13 @@ def stepDiffusion(d_dataSet,diffusion_t,diffusion_d,mode='weight'):
     ret_dataSet=[]
     if mode=='brute':
         for record in d_dataSet:
-            for dd in range(len(diffusion_t)):
-                record_t=[x+y[dd] for x in record for y in diffusion_d ]
-                for t in range(diffusion_t[dd]):
-                    ret_dataSet.append(record_t)
+            for dt in range(len(diffusion_t)):
+                for dd in range(len(diffusion_d[0])):
+                    record_t=[]
+                    for i in range(len(record)):
+                        record_t.append(record[i]+diffusion_d[i][dd])
+                    for t in range(diffusion_t[dt]):
+                        ret_dataSet.append(record_t)
         print('brute diffused')
         return ret_dataSet
 
