@@ -1,4 +1,4 @@
-def stepDiffusion(d_dataSet,diffusion_t,diffusion_d,mode='weight'):
+def stepDiffusion(d_dataSet,diffusion_t,diffusion_s,mode='weight'):
     """
     :param
         d_dataSet:  divided dataset(also normalized).
@@ -15,12 +15,14 @@ def stepDiffusion(d_dataSet,diffusion_t,diffusion_d,mode='weight'):
     if mode=='brute':
         for record in d_dataSet:
             for dt in range(len(diffusion_t)):
-                for dd in range(len(diffusion_d[0])):
+                    # new_diffused_record
                     record_t=[]
                     for i in range(len(record)):
-                        record_t.append(record[i]+diffusion_d[i][dd])
+                        record_t.append(record[i]+diffusion_s[i][dt])
+                    #add the weight by loop_append
                     for t in range(diffusion_t[dt]):
                         ret_dataSet.append(record_t)
+
         print('brute diffused')
         return ret_dataSet
 
@@ -29,7 +31,7 @@ def stepDiffusion(d_dataSet,diffusion_t,diffusion_d,mode='weight'):
             for dd in range(len(diffusion_t)):
                 record_t=[]
                 for x in range(len(record)):
-                    record_t.append(record[x]+diffusion_d[x][dd])
+                    record_t.append(record[x]+diffusion_s[x][dd])
                 ret_dataSet.append([record_t,diffusion_t[dd]])
         print('weight diffused')
         return ret_dataSet

@@ -429,11 +429,11 @@ if __name__ == "__main__":
         new_min_support = int(min_support_param * sum(dif_list))
 
     if dataChoice=='small':
-        easyDataSet=[[0,0,0],[1,1,1]]
+        easyDataSet=[[0,0],[1,1]]
         dataSet.quickStart(fileName=easyDataSet,haveHeader=False)
-        dif_list=[1,]
+        dif_list=[1,3,1]
         #dif_step=[[-0.1, 0, 0.1], ] * len(dataSet.n_data[0])
-        dif_step = [[0,], ] * len(dataSet.n_data[0])
+        dif_step = [[-0.1,0,0.1], ] * len(dataSet.n_data[0])
         new_min_support = 1
 
     #mode = 'weight'
@@ -449,8 +449,8 @@ if __name__ == "__main__":
             print(i)
         print('number of results',len(rule_list))
 
-    #print('****************\n*******************weight******************\n***************************')
-    #mode ='weight'
+    print('****************\n*******************weight******************\n***************************')
+    mode ='weight'
     if mode == 'weight':
         dataSet_w = stepDiffusion(dataSet.d_data, dif_list, dif_step, mode='weight')
         for r in range(len(dataSet_w)):
