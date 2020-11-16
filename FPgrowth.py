@@ -19,14 +19,16 @@ class Fp_growth():
             self.generate_R = self.generate_R_brute
             self.generate_L = self.generate_L_brute
             self.find_cond_pattern_base = self.find_cond_pattern_base_brute
-            self.create_fptree=self.create_fptree_brute
-            self.update_fptree=self.update_fptree_brute
+            self.create_cond_fptree = self.create_cond_fptree_brute
+            self.create_fptree = self.create_fptree_brute
+            self.update_fptree = self.update_fptree_brute
         if mode == 'weight':
             self.generate_R = self.generate_R_weight
             self.generate_L = self.generate_L_weight
             self.find_cond_pattern_base = self.find_cond_pattern_base_weight
-            self.create_fptree=self.create_fptree_weight
-            self.update_fptree=self.update_fptree_weight
+            self.create_cond_fptree = self.create_cond_fptree_weight
+            self.create_fptree = self.create_fptree_weight
+            self.update_fptree = self.update_fptree_weight
 
     def update_header(self, node, targetNode):  # 更新headertable中的node节点形成的链表
         while node.nodeLink != None:
@@ -181,33 +183,24 @@ class Fp_growth():
 
 #***************************************part of WEIGHT************************************************
 
-    def update_fptree_weight(self, items, node, headerTable):  # 用于更新fptree
+    def update_fptree_weight(self, items, node, headerTable,weight):  # 用于更新fptree
 
-        #for i in headerTable:
-        #    print(i)
-        if type(items[0][0]) == type(str()):
-            c_tmp=items[0][1]
-        else:
-            c_tmp=items[0][0]
-        #print(items)
-        #input()
-        f_items=frozenset(items[0])
 
-        if f_items in node.children:
+        if items[0] in node.children:
             # 判断items的第一个结点是否已作为子结点
-            node.children[f_items].count = node.children[f_items].count+c_tmp
+            node.children[items[0]].count = node.children[items[0]].count+weight
         else:
             # 创建新的分支
-            node.children[f_items] = Node(f_items, c_tmp, node)
+            node.children[items[0]] = Node(items[0], weight, node)
             # 更新相应频繁项集的链表，往后添加
-            tmp=items[0][0]
+            tmp=items[0]
             if headerTable[tmp][1] == None:
-                headerTable[tmp][1] = node.children[f_items]
+                headerTable[tmp][1] = node.children[items[0]]
             else:
-                self.update_header(headerTable[tmp][1], node.children[f_items])
+                self.update_header(headerTable[tmp][1], node.children[items[0]])
         # 递归
         if len(items) > 1:
-            self.update_fptree(items[1:], node.children[f_items], headerTable)
+            self.update_fptree(items[1:], node.children[items[0]], headerTable,weight)
 
     def create_fptree_weight(self, data_set, min_support, flag=False):  # 建树主函数
         '''
@@ -251,20 +244,20 @@ class Fp_growth():
                     localD[item] = headerTable[item][0]  # element : count
             if len(localD) > 0:
                 # 根据全局频数从大到小对单样本排序
-                order_item = [v for v in sorted(localD.items(), key=lambda x: x[1], reverse=True)]
+                order_item = [v[0] for v in sorted(localD.items(), key=lambda x: x[1], reverse=True)]
                 #print(order_item)
                 #for i in order_item:
                 #   print(i)
                 #input()
                 # 用过滤且排序后的样本更新树
-                self.update_fptree_weight(order_item, tree_header, headerTable)
+                self.update_fptree_weight(order_item, tree_header, headerTable,t[1])
         return tree_header, headerTable
 
     def find_cond_pattern_base_weight(self, node_name, headerTable):
         '''
         根据节点名字，找出所有条件模式基
         '''
-        if type(list(node_name)[0])==type(str()):
+        if type(list(node_name)[0])==type(frozenset()):
             tmp=list(node_name)[0]
         else:
             tmp=list(node_name)[1]
@@ -277,12 +270,12 @@ class Fp_growth():
                 nodepath_tmp=[]
                 for i in nodepath[:-1]:
                     ii=list(i)
-                    if type(ii[0])==type(str()):
+                    if type(ii[0])==type(frozenset()):
                         nodepath_tmp.append(ii[0])
                     else:
                         nodepath_tmp.append(ii[1])
 
-                cond_pat_base[frozenset(nodepath_tmp)] = treeNode.count
+                cond_pat_base[nodepath_tmp] = treeNode.count
             treeNode = treeNode.nodeLink
         #print('cpd:',cond_pat_base)
         return cond_pat_base
@@ -292,41 +285,29 @@ class Fp_growth():
                 headerTable:dictionary of the "('39.6', [18, <__main__.Node object at 0x000001B355482DC8>])"
         """
         # 最开始的频繁项集是headerTable中的各元素
-        #for i in headerTable.items():
-        #    print('h',i)
         freqs = [v for v in sorted(headerTable.items(), key=lambda p: p[1][0])]  # 根据频繁项的总频次排序
         for i in range(len(freqs)):
-            #print('i-1:',freqs[i])
             freqs[i]=frozenset([freqs[i][0],freqs[i][1][0]])
-            #print('i:',freqs[i])
 
-        #for a in support_data.items():
-        #for a in freqs:
-        #    print('s:',a)
-        #input()
         for freq in freqs:  # 对每个频繁项
             freq_set = temp.copy()
             freq_set.add(freq)
 
-            #if len(freq_set)==2:
-            #    print(freq_set)
-            #    input()
-
             freq_items.add(frozenset(freq_set))
             ##TODO(main) rewrite the frozenset to make it ordered and repeat-able OR make list to str for hash
 
-            if type(list(freq)[0]) == type(str()):
+            if type(list(freq)[0]) == type(frozenset()):
                 tmp = list(freq)[0]
             else:
                 tmp = list(freq)[1]
-
+            ##TODO(doing) make weight added rather than support
             if frozenset(freq_set) not in support_data:  # 检查该频繁项是否在support_data中
                 #print(freq_set)
                 support_data[frozenset(freq_set)] = headerTable[tmp][0]
                 #print(support_data[frozenset(freq_set)])
             else:
                 #print(freq_set)
-                support_data[frozenset(freq_set)] += headerTable[tmp][0]
+                support_data[freq_set] += headerTable[tmp][0]
                 #print(support_data[frozenset(freq_set)])
 
             cond_pat_base = self.find_cond_pattern_base(freq, headerTable)  # 寻找到所有条件模式基 ##TODO(done) make support return together
@@ -448,7 +429,7 @@ if __name__ == "__main__":
         new_min_support = int(min_support_param * sum(dif_list))
 
     if dataChoice=='small':
-        easyDataSet=[[0,0],[1,1]]
+        easyDataSet=[[0,0],[1,1],[0,0]]
         dataSet.quickStart(fileName=easyDataSet,haveHeader=False)
 
         #dif_list=[1,3,1]
@@ -458,8 +439,8 @@ if __name__ == "__main__":
 
         new_min_support = 1
 
-    #mode = 'weight'
-    mode = 'brute'
+    mode = 'weight'
+    #mode = 'brute'
 
     print('****************\n******************* brute ******************\n***************************')
     if mode == 'brute':
@@ -471,7 +452,7 @@ if __name__ == "__main__":
             print(i)
         print('number of results',len(rule_list))
 
-    print('****************\n*******************weight******************\n***************************')
+    print('****************\n******************* weight ******************\n***************************')
     mode ='weight'
     if mode == 'weight':
         dataSet_w = stepDiffusion(dataSet.d_data, dif_list, dif_step, mode='weight')
