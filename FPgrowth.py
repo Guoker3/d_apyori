@@ -404,8 +404,27 @@ class Fp_growth():
                         #    print(support_data)
                 sub_set_list.append(freq_set)
         rule_list = self.supportCalculator(rule_list,support_data)
-        rule_list = sorted(rule_list, key=lambda x: (x[2]), reverse=True)
-        return rule_list
+        rule_list_ret=[]
+        #ignore the useless count
+        for r in rule_list:
+            f = set()
+            s = set()
+            for i1 in list(r[0]):
+                i1 = list(i1)
+                if type(i1[0])==type(str()):
+                    f.add(i1[0])
+                else:
+                    f.add(i1[1])
+            for i2 in list(r[1]):
+                i2 = list(i2)
+                if type(i2[0])==type(str()):
+                    s.add(i2[0])
+                else:
+                    s.add(i2[1])
+            rule_list_ret.append([frozenset(f),frozenset(s),r[2],r[3]])
+
+        rule_list_ret = sorted(rule_list_ret, key=lambda x: (x[2]), reverse=True)
+        return rule_list_ret
 
 
 if __name__ == "__main__":
@@ -431,9 +450,12 @@ if __name__ == "__main__":
     if dataChoice=='small':
         easyDataSet=[[0,0],[1,1]]
         dataSet.quickStart(fileName=easyDataSet,haveHeader=False)
-        dif_list=[1,3,1]
-        #dif_step=[[-0.1, 0, 0.1], ] * len(dataSet.n_data[0])
-        dif_step = [[-0.1,0,0.1], ] * len(dataSet.n_data[0])
+
+        #dif_list=[1,3,1]
+        #dif_step = [[-0.1,0,0.1], ] * len(dataSet.n_data[0])
+        dif_list = [1,]
+        dif_step=[[0,], ] * len(dataSet.n_data[0])
+
         new_min_support = 1
 
     #mode = 'weight'
