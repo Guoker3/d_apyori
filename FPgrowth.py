@@ -356,8 +356,7 @@ if __name__ == "__main__":
         min_conf=0.5
         new_min_support = 2
     mode = None
-    #mode = 'weight'
-    mode = 'brute'
+    #mode = 'brute'
 
     print('****************\n******************* brute ******************\n***************************')
     if mode == 'brute':
