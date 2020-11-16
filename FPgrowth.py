@@ -261,7 +261,7 @@ class Fp_growth():
             if frozenset(freq_set) not in support_data:  # 检查该频繁项是否在support_data中
                 support_data[frozenset(freq_set)] = headerTable[freq][0]
             else:
-                support_data[frozenset(freq_set)] += headerTable[freq][0]
+                support_data[frozenset(freq_set)] = support_data[frozenset(freq_set)] + headerTable[freq][0]
 
             cond_pat_base = self.find_cond_pattern_base(freq, headerTable)  # 寻找到所有条件模式基
             cond_pat_dataset = []  # 将条件模式基字典转化为数组
@@ -269,7 +269,7 @@ class Fp_growth():
                 item_temp = list(item)
                 item_temp.sort()
                 for i in range(cond_pat_base[item]):
-                    cond_pat_dataset.append([item_temp,weight])
+                    cond_pat_dataset.append([item_temp,1])##TODO tmp jump point
             # 创建条件模式树
             cond_tree, cur_headtable = self.create_fptree(cond_pat_dataset, min_support)
             if cur_headtable != None:
@@ -318,41 +318,10 @@ class Fp_growth():
                         if conf >= min_conf and big_rule not in rule_list:
                             # print freq_set-sub_set, " => ", sub_set, "conf: ", conf
                             rule_list.append(big_rule)
-                    #else:
-                        #print('sub_set:',sub_set)
-                        #print('freq_set:',freq_set)
-                        #print(freq_set-sub_set)
-                        #print('1:',sub_set.issubset(freq_set))
-                        #print('2:',freq_set-sub_set in support_data)
-                        #if sub_set.issubset(freq_set):
-                        #    print(freq_set in support_data)
-                        #    print('sub_set:',sub_set)
-                        #    print('freq_set:',freq_set)
-                        #    print(freq_set-sub_set)
-                        #    print(support_data)
                 sub_set_list.append(freq_set)
         rule_list = self.supportCalculator(rule_list,support_data)
-        rule_list_ret=[]
-        #ignore the useless count
-        for r in rule_list:
-            f = set()
-            s = set()
-            for i1 in list(r[0]):
-                i1 = list(i1)
-                if type(i1[0])==type(str()):
-                    f.add(i1[0])
-                else:
-                    f.add(i1[1])
-            for i2 in list(r[1]):
-                i2 = list(i2)
-                if type(i2[0])==type(str()):
-                    s.add(i2[0])
-                else:
-                    s.add(i2[1])
-            rule_list_ret.append([frozenset(f),frozenset(s),r[2],r[3]])
-
-        rule_list_ret = sorted(rule_list_ret, key=lambda x: (x[2]), reverse=True)
-        return rule_list_ret
+        rule_list = sorted(rule_list, key=lambda x: (x[2]), reverse=True)
+        return rule_list
 
 
 if __name__ == "__main__":
@@ -376,16 +345,16 @@ if __name__ == "__main__":
         new_min_support = int(min_support_param * sum(dif_list))
 
     if dataChoice=='small':
-        easyDataSet=[[0,0,0],[1,1,1],[0,0,1]]
-        #easyDataSet=[[0,0,0],[1,1,1],[0,0,0.2],[0,0,0.7],[0.1,0.2,0.3]]
+        #easyDataSet=[[0,0,0],[0,0,1]]
+        easyDataSet=[[0,0,0],[1,1,1],[0,0,0.2],[0,0,0.7],[0.1,0.2,0.3]]
         dataSet.quickStart(fileName=easyDataSet,haveHeader=False)
 
-        #dif_list=[1,3,1]
-        #dif_step = [[-0.1,0,0.1], ] * len(dataSet.n_data[0])
-        dif_list = [1,]
-        dif_step=[[0,], ] * len(dataSet.n_data[0])
-
-        new_min_support = 1
+        dif_list=[1,3,1]
+        dif_step = [[-0.1,0,0.1], ] * len(dataSet.n_data[0])
+        #dif_list = [1,]
+        #dif_step=[[0,], ] * len(dataSet.n_data[0])
+        min_conf=0.5
+        new_min_support = 2
     mode = None
     #mode = 'weight'
     mode = 'brute'
