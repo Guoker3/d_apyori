@@ -340,6 +340,7 @@ if __name__ == "__main__":
         dif_list = [60,90, 100, 90,60]
         dif_step=[[-0.2,-0.1, 0, 0.1,0.2], ] * len(dataSet.n_data[0])
         new_min_support = int(min_support_param * sum(dif_list))
+        print('support selected in luntai : ', new_min_support)
 
     if dataChoice=='small':
         #easyDataSet=[[0,0,0],[0,0,1]]
@@ -378,6 +379,7 @@ if __name__ == "__main__":
         for i in rule_list:
             print('rule',i)
         print('number of results:',len(rule_list))
+        print('total diffuse number : ',sum(dif_list) )
     time_w=time.time()-time_w_s
     print('brute time : ',time_b)
     print('weight time : ',time_w)
