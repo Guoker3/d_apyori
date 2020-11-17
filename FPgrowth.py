@@ -269,7 +269,7 @@ class Fp_growth():
                 item_temp = list(item)
                 item_temp.sort()
                 for i in range(cond_pat_base[item]):
-                    cond_pat_dataset.append([item_temp,1])##TODO tmp jump point
+                    cond_pat_dataset.append([item_temp,1])
             # 创建条件模式树
             cond_tree, cur_headtable = self.create_fptree(cond_pat_dataset, min_support)
             if cur_headtable != None:
@@ -309,7 +309,6 @@ class Fp_growth():
         sub_set_list = []
         for i in range(0, len(L)):
             for freq_set in L[i]:
-                ##TODO(consider) judge whether "sub_set_list.append(freq_set)" should be here
                 for sub_set in sub_set_list:
                     if sub_set.issubset(
                             freq_set) and freq_set - sub_set in support_data:  # and freq_set-sub_set in support_data
@@ -325,39 +324,38 @@ class Fp_growth():
 
 
 if __name__ == "__main__":
-    ##TODO check why result differ between the brute and weight
-    min_support_param = 3  # 最小支持度
-    min_conf = 0  # 最小置信度
-    ##TODO(fyt) estimate the min_conf relationship
+    min_support_param = 25  # 最小支持度
+    min_conf = 0.7  # 最小置信度
 
     from step_mode import *
     from loadData import *
 
     dataSet = d_apyori_cookDataSet()
 
-    #dataChoice='luntai'
-    dataChoice='small'
+    dataChoice='luntai'
+    #dataChoice='small'
 
     if dataChoice=='luntai':
         dataSet.quickStart(fileName='test9_11.csv', haveHeader=True)
-        dif_list = [1, 3, 1]
-        dif_step=[[-0.1, 0, 0.1], ] * len(dataSet.n_data[0])
+        dif_list = [60,90, 100, 90,60]
+        dif_step=[[-0.2,-0.1, 0, 0.1,0.2], ] * len(dataSet.n_data[0])
         new_min_support = int(min_support_param * sum(dif_list))
 
     if dataChoice=='small':
         #easyDataSet=[[0,0,0],[0,0,1]]
-        easyDataSet=[[0,0,0],[1,1,1],[0,0,0.2],[0,0,0.7],[0.1,0.2,0.3]]
+        easyDataSet=[[0,0,0],[1,1,1],[0,0,0.22],[0,0,0.7],[0.1,0.2,0.3],[0.87,0,0.22]]
         dataSet.quickStart(fileName=easyDataSet,haveHeader=False)
 
-        dif_list=[1,3,1]
-        dif_step = [[-0.1,0,0.1], ] * len(dataSet.n_data[0])
+        #dif_list=[1000,30000,1000]
+        dif_list=[1000,2000,3000,4000,5000,6000,7000,6000,5000,4000,3000,2000,1000]
+        dif_step = [[-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0,0.1,0.2,0.3,0.4,0.5,0.6], ] * len(dataSet.n_data[0])
         #dif_list = [1,]
         #dif_step=[[0,], ] * len(dataSet.n_data[0])
         min_conf=0.5
         new_min_support = 2
     mode = None
     #mode = 'brute'
-
+    time_b_s=time.time()
     print('****************\n******************* brute ******************\n***************************')
     if mode == 'brute':
         dataSet_b = stepDiffusion(dataSet.d_data, dif_list, dif_step, mode='brute')
@@ -367,7 +365,8 @@ if __name__ == "__main__":
         for i in rule_list:
             print(i)
         print('number of results',len(rule_list))
-
+    time_b=time.time()-time_b_s
+    time_w_s=time.time()
     print('****************\n******************* weight ******************\n***************************')
     mode ='weight'
     if mode == 'weight':
@@ -379,6 +378,9 @@ if __name__ == "__main__":
         for i in rule_list:
             print('rule',i)
         print('number of results:',len(rule_list))
+    time_w=time.time()-time_w_s
+    print('brute time : ',time_b)
+    print('weight time : ',time_w)
 """
     print('****************\n***************** pyfpgrowth ********************\n***************************')
     mode = 'pyfpgrowth'
