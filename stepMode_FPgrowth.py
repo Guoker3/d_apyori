@@ -214,6 +214,7 @@ class Fp_growth():
             #print('t',t)
             for item in t[0]:
                 #print(item)
+                ##TODO(Jump Point 1) change count in frequent items mining
                 if item not in item_count:
                     item_count[item] = t[1]
                 else:
@@ -269,6 +270,7 @@ class Fp_growth():
                 item_temp = list(item)
                 item_temp.sort()
                 for i in range(cond_pat_base[item]):
+                    ##TODO(Jump Point 3 when go through the )
                     cond_pat_dataset.append([item_temp,1])
             # 创建条件模式树
             cond_tree, cur_headtable = self.create_fptree(cond_pat_dataset, min_support)
