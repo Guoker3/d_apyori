@@ -48,6 +48,9 @@ class d_apyori_cookDataSet:
         else:
             raise TypeError('unknown kind of files')
 
+    def flattenBEFOREnormalization(self):
+        pass  ##TODO(extra precision optimazation) complete this function
+
     def normalization(self):
         """:argument
             normalize the dataset and save the information of the normalize-process in (n_inf_min and n_inf_range)\
@@ -90,11 +93,59 @@ class d_apyori_cookDataSet:
         self.d_data = pd_n_data.values.tolist()
         print('data divided')
 
-    def quickStart(self, fileName='test9_11.csv', haveHeader=True):
+    def quickStart_stepmode(self, fileName='test9_11.csv', haveHeader=True):
         self.loadDataSet(fileName=fileName, haveHeader=haveHeader)
         self.normalization()
         self.division()
         print('quick started')
+
+    def baseDistanceFunc(self):
+        ##TODO(extra toolkit) add func choice
+        funcChoiceName=[]
+        funcChoice=dict()
+
+        return funcChoiceName,funcChoice
+
+
+    def create_rTOx_DistanceFunc_insolate(self, raw_func=None, section_pick=None):
+        """
+        :paramIn
+            :section_pick in types [a,b] , func(a,b) -> func(-1, 1), func(others) = 0
+        :argument
+            :range(distanceFunc) in [0,1]
+        """
+        funcChoiceName, funcChoice = self.baseDistanceFunc()
+        if raw_func == None:
+            print('you can choose some builtin funcs or write one in')
+            print('builtin funcs:')
+            print('\n'.join(funcChoiceName))
+        elif type(raw_func) == type('str'):
+            func = funcChoice['raw_func']
+        else:
+            func = raw_func
+
+        # reflect func to section if select
+        if type(section_pick) == type(list()) and len(section_pick) == 2:
+            a, b = section_pick
+
+            def s_func(r, x):
+                value_t = (r - x) * (b / 2 - a / 2) + a / 2 + b / 2
+                d = func(value_t,0)
+                return d
+
+            func = s_func
+
+        return func
+
+    def create_RTOx_DistanceFunc_connect(self, raw_func=None, section_pick=None):
+        pass##TODO(mode funcs) complete this func like rTOx
+
+    def preCal_1itemDistance(self, distance_func_list=None, attr_insolate=True):
+        """
+            :paramIn:
+        """
+        if self.d_data == None:
+            raise Exception('have no data set normalized')
 
 
 if __name__ == '__main__':

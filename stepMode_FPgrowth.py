@@ -347,7 +347,7 @@ if __name__ == "__main__":
     if dataChoice=='small':
         #easyDataSet=[[0,0,0],[0,0,1]]
         easyDataSet=[[0,0,0],[1,1,1],[0,0,0.22],[0,0,0.7],[0.1,0.2,0.3],[0.87,0,0.22]]
-        dataSet.quickStart(fileName=easyDataSet,haveHeader=False)
+        dataSet.quickStart_stepmode(fileName=easyDataSet,haveHeader=False)
 
         #dif_list=[1000,30000,1000]
         dif_list=[1000,2000,3000,4000,5000,6000,7000,6000,5000,4000,3000,2000,1000]
