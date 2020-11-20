@@ -2,6 +2,7 @@ from csv import reader as csvReader
 import numpy as np
 import pandas as pd
 from copy import deepcopy
+import matplotlib.pyplot as plt
 
 
 class d_apyori_cookDataSet:
@@ -104,10 +105,20 @@ class d_apyori_cookDataSet:
 
     def baseDistanceFunc(self):
         ##TODO(extra toolkit) add func choice
-        funcChoiceName=[]
         funcChoice=dict()
 
-        return funcChoiceName,funcChoice
+        def l_sigmoid(r,x):
+            return 2 - (2 / (1 + np.exp(-abs(r-x))))
+        funcChoice['l_sigmoid']=l_sigmoid
+
+        def l_tanh(r,x):
+            d=abs(r-x)
+            a=np.exp(d)
+            b=1/a
+            return 1 - (a - b) / (a + b)
+        funcChoice['l_tanh'] = l_tanh
+
+        return funcChoice
 
 
     def create_rTOx_DistanceFunc(self, raw_func=None, section_pick=None):
@@ -118,15 +129,15 @@ class d_apyori_cookDataSet:
         :argument
             :range(distanceFunc) in [0,1]
         """
-        funcChoiceName, funcChoice = self.baseDistanceFunc()
+        funcChoice = self.baseDistanceFunc()
         if raw_func == None and not isinstance(section_pick, dict):
             print('you can choose some builtin funcs or write one in')
             print('builtin funcs:')
-            print('\n'.join(funcChoiceName))
+            print('\n'.join(funcChoice.keys()))
         elif  raw_func == None and isinstance(section_pick, dict):
             _func = None
         elif type(raw_func) == type('str'):
-            _func = funcChoice['raw_func']
+            _func = funcChoice[raw_func]
         else:
             _func = raw_func
 
@@ -140,7 +151,7 @@ class d_apyori_cookDataSet:
             def s_func(r, x):
                 #check if tid is same
                 if int(r/3) != int(x/3):
-                    raise ValueError('r and x are not in the same attribute tid')
+                    return 0
                 value_t = (r - x) * (b / 2 - a / 2) + a / 2 + b / 2
                 d = _func2(value_t,0)
                 return d
@@ -166,9 +177,6 @@ class d_apyori_cookDataSet:
         self.distanceFuncList.append(_func)
         print("new func saved in self.distanceFuncList ,position : ", _len_dis)
 
-    def create_RTOx_DistanceFunc_connect(self, raw_func=None, t_section_pick=None):
-        pass##TODO(mode funcs) complete this func like rTOx
-
     def preCal_1itemDistance(self, distance_func_list=None, attr_insolate=True):
         """
             :paramIn:
@@ -176,6 +184,17 @@ class d_apyori_cookDataSet:
         if self.d_data == None:
             raise Exception('have no data set normalized')
 
+def plotFunc(func,scale='single'):
+    if scale == 'single':
+        plt.title(func.__name__)
+        x1=np.arange(-3,-1,0.01)
+        y1=[func(xx,0) for xx in x1]
+        x2=np.arange(1,3,0.01)
+        y2=[func(xx,0) for xx in x2]
+        x3=np.arange(-1,1,0.01)
+        y3=[func(xx,0) for xx in x3]
+        plt.plot(x1,y1,'b',x2,y2,'b',x3,y3,'y')
+        plt.show()
 
 if __name__ == '__main__':
     t = d_apyori_cookDataSet()
@@ -191,3 +210,7 @@ if __name__ == '__main__':
 
     t.create_rTOx_DistanceFunc(raw_func=None,section_pick={0:t.distanceFuncList[0],2:t.distanceFuncList[0],3:t.distanceFuncList[0]})
     print(t.distanceFuncList[1]([0.1,3.7,6.2,9.9],9.4))
+
+    t.create_rTOx_DistanceFunc(raw_func='l_sigmoid',section_pick=[-10,10])
+    plotFunc(t.distanceFuncList[2])
+    print(t.distanceFuncList[2](0.0,0.2))
