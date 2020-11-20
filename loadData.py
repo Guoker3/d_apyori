@@ -1,6 +1,7 @@
 from csv import reader as csvReader
 import numpy as np
 import pandas as pd
+from copy import deepcopy
 
 
 class d_apyori_cookDataSet:
@@ -24,6 +25,8 @@ class d_apyori_cookDataSet:
         self.n_data_inf = dict()
 
         self.d_data = None
+
+        self.distanceFuncList=list()
 
     def __loadCSV(self, csvName, haveHeader, myEncoding='utf-8'):
         data = []
@@ -120,24 +123,34 @@ class d_apyori_cookDataSet:
             print('builtin funcs:')
             print('\n'.join(funcChoiceName))
         elif type(raw_func) == type('str'):
-            func = funcChoice['raw_func']
+            _func = funcChoice['raw_func']
         else:
-            func = raw_func
+            _func = raw_func
 
         # reflect func to section if select
-        if type(section_pick) == type(list()) and len(section_pick) == 2:
+        if section_pick == None:
+            pass
+        #r to x
+        elif isinstance(section_pick,list) and len(section_pick) == 2:
             a, b = section_pick
-
+            _func2=deepcopy(_func)
             def s_func(r, x):
                 value_t = (r - x) * (b / 2 - a / 2) + a / 2 + b / 2
-                d = func(value_t,0)
+                d = _func2(value_t,0)
                 return d
 
-            func = s_func
+            _func = s_func
+        #R to x
+        elif isinstance(section_pick,list) and np.array([isinstance(s,list) and len(s)==2 for s in section_pick]).all():
+            pass
+        else:
+            raise TypeError('section_pick should in form [a,b] OR in form[[tid,a,b], [tid,a,b], ...]')
 
-        return func
+        _len_dis=len(self.distanceFuncList)
+        self.distanceFuncList.append(_func)
+        print("new func saved in self.distanceFuncList ,position : ", _len_dis)
 
-    def create_RTOx_DistanceFunc_connect(self, raw_func=None, section_pick=None):
+    def create_RTOx_DistanceFunc_connect(self, raw_func=None, t_section_pick=None):
         pass##TODO(mode funcs) complete this func like rTOx
 
     def preCal_1itemDistance(self, distance_func_list=None, attr_insolate=True):
@@ -153,3 +166,9 @@ if __name__ == '__main__':
     t.loadDataSet('test9_11.csv', haveHeader=True)
     t.normalization()
     t.division()
+
+    def myfunc(a,b):
+        return (a-b)**2
+
+    t.create_rTOx_DistanceFunc_insolate(raw_func=myfunc,section_pick=[-1,1])
+    print(t.distanceFuncList[0](1,3))
