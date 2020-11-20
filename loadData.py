@@ -110,18 +110,21 @@ class d_apyori_cookDataSet:
         return funcChoiceName,funcChoice
 
 
-    def create_rTOx_DistanceFunc_insolate(self, raw_func=None, section_pick=None):
+    def create_rTOx_DistanceFunc(self, raw_func=None, section_pick=None):
         """
         :paramIn
-            :section_pick in types [a,b] , func(a,b) -> func(-1, 1), func(others) = 0
+            :section_pick in types [a,b] , func(-1,1) -> func(a, b) from norm-data to output_func
+                help easy scale the func ,if None,calculate directly
         :argument
             :range(distanceFunc) in [0,1]
         """
         funcChoiceName, funcChoice = self.baseDistanceFunc()
-        if raw_func == None:
+        if raw_func == None and not isinstance(section_pick, dict):
             print('you can choose some builtin funcs or write one in')
             print('builtin funcs:')
             print('\n'.join(funcChoiceName))
+        elif  raw_func == None and isinstance(section_pick, dict):
+            _func = None
         elif type(raw_func) == type('str'):
             _func = funcChoice['raw_func']
         else:
@@ -135,16 +138,29 @@ class d_apyori_cookDataSet:
             a, b = section_pick
             _func2=deepcopy(_func)
             def s_func(r, x):
+                #check if tid is same
+                if int(r/3) != int(x/3):
+                    raise ValueError('r and x are not in the same attribute tid')
                 value_t = (r - x) * (b / 2 - a / 2) + a / 2 + b / 2
                 d = _func2(value_t,0)
                 return d
 
             _func = s_func
         #R to x
-        elif isinstance(section_pick,list) and np.array([isinstance(s,list) and len(s)==2 for s in section_pick]).all():
-            pass
+        elif isinstance(section_pick,dict):
+            value_t=list()
+            tid_func=deepcopy(section_pick)
+
+            def s_func(R,x):
+                D=0
+                for tid in tid_func.keys():
+                    D=tid_func[tid](R[tid] % 3, x % 3)+D
+                return D
+
+            _func=s_func
+
         else:
-            raise TypeError('section_pick should in form [a,b] OR in form[[tid,a,b], [tid,a,b], ...]')
+            raise TypeError('section_pick should in form [a,b] for rTOx OR in form{int_tid1:func1, int_tid2:func2, ...} for RTOx')
 
         _len_dis=len(self.distanceFuncList)
         self.distanceFuncList.append(_func)
@@ -170,5 +186,8 @@ if __name__ == '__main__':
     def myfunc(a,b):
         return (a-b)**2
 
-    t.create_rTOx_DistanceFunc_insolate(raw_func=myfunc,section_pick=[-1,1])
-    print(t.distanceFuncList[0](1,3))
+    t.create_rTOx_DistanceFunc(raw_func=myfunc,section_pick=[-1,1])
+    print(t.distanceFuncList[0](0.2,0.6))
+
+    t.create_rTOx_DistanceFunc(raw_func=None,section_pick={0:t.distanceFuncList[0],2:t.distanceFuncList[0],3:t.distanceFuncList[0]})
+    print(t.distanceFuncList[1]([0.1,3.7,6.2,9.9],9.4))
