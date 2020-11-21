@@ -2,6 +2,9 @@ import loadData
 import numpy as np
 import pandas as pd
 from copy import deepcopy
+import threading
+import time
+
 class d_apyori_preCal:
     def __init__(self, dividedData, dataHeader, fault_distanceFunction =None , mode = 'insolate'):
         """
@@ -31,6 +34,16 @@ class d_apyori_preCal:
         else:
             raise ValueError('list no in format')
 
+    def __preCal_1item_insolate_columnLoop(self,tid,distFuncIn,se_t):
+        time_t=time.time()
+        se_t_2 = deepcopy(se_t)
+        for i in se_t:
+            dl = list()
+            for r in se_t_2:
+                dl.append(distFuncIn(r, i))
+            self.pre_1item[tid][i] = dl
+        print('1item precal (tid) complete : ', tid, '/', self.data_inf['column_number']-1, 'cost time : ', time.time()-time_t)
+
     def preCal_1item(self,distFuncList=None):
         if distFuncList == None :
             distFuncList=self.fault_distanceFunction
@@ -38,21 +51,28 @@ class d_apyori_preCal:
         data=deepcopy(self.data)
         if self.mode == 'insolate':
             n=0
+            threadingPool = list()
             for column in data.columns:
-                print('1item precal_loop : ', n,'/',self.data_inf['column_number'])
                 distFunc = distFuncList[n]
                 se_t = data[column]
-                se_t_2=deepcopy(se_t)
-                for i in se_t:
-                    dl=list()
-                    for r in se_t_2:
-                        dl.append(distFunc(r,i))
-                    self.pre_1item[n][i] = dl
+                threadingPool.append(threading.Thread(target=self.__preCal_1item_insolate_columnLoop(n,distFunc,se_t)))
                 n = n + 1
+            th_it=iter(threadingPool)
+            maxThreading=1
+            count=0
+            while count<maxThreading:
+                try:
+                    th=next(th_it)
+                except Exception:
+                    break
+                th.start()
+                count=count+1
+                time.sleep(3)
+
 
 if __name__ == '__main__':
     t = loadData.d_apyori_cookDataSet()
-    t.loadDataSet('test9_11.csv', haveHeader=True,data_set_cut=[0,100])
+    t.loadDataSet('test9_11.csv', haveHeader=True,data_set_cut=[0,2000])
     t.normalization()
     t.division()
 
@@ -61,4 +81,4 @@ if __name__ == '__main__':
     p=d_apyori_preCal(t.d_data,t.header,distFunc, mode = 'insolate')
     p.preCal_1item()
     for i in p.pre_1item:
-        print(i)
+        print(str(i)[0:100])
