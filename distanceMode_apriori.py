@@ -89,7 +89,7 @@ def runApriori(data_iter,preClass, minSupport, minConfidence, minLift=0):
      - items (tuple, support)
      - rules ((pretuple, posttuple), confidence)
     """
-    itemSet, transactionList = getItemSetTransactionList(data_iter)
+    itemSet, transactionList = getItemSetTransactionList(data_iter.values.tolist())
 
     freqSet = defaultdict(int)
     largeSet = dict()
@@ -156,7 +156,7 @@ if __name__ == "__main__":
 
     minSupport = 0
     minConfidence = 0
-    rules = runApriori(t.d_data, p, minSupport, minConfidence)
+    rules = runApriori(p.data, p, minSupport, minConfidence)
     #     - items (tuple, support)
     #     - rules ((pretuple, posttuple),support, confidence, lift)
 
