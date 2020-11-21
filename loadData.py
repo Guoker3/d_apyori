@@ -176,9 +176,11 @@ class d_apyori_cookDataSet:
 
             def s_func(R,x):
                 D=0
+                num=0
                 for tid in tid_func.keys():
                     D=tid_func[tid](R[tid] % 3, x % 3)+D
-                return D
+                    num=num+1
+                return D/num
 
             _func=s_func
 
