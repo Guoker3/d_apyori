@@ -35,7 +35,7 @@ class d_apyori_preCal:
 
     def __preCal_1item_columnLoop(self,tid,distFuncIn,se_t,mode):
         time_t=time.time()
-        if mode == 'insolate':
+        if mode == 'insolate' or mode == 'atom':
             se_t_2 = deepcopy(se_t)
             for i in se_t:
                 dl = list()
@@ -65,7 +65,7 @@ class d_apyori_preCal:
             threadingPool.append(threading.Thread(target=self.__preCal_1item_columnLoop(n,distFunc,se_t,self.mode[n])))
             n = n + 1
         th_it=iter(threadingPool)
-        maxThreading=1
+        maxThreading=5
         count=0
         while count<maxThreading:
             try:
@@ -96,8 +96,7 @@ if __name__ == '__main__':
     t.normalization()
     t.division()
 
-    dis_mode=['insolate', ] * len(t.header)
-    p=d_apyori_preCal(t.d_data,t.header,distFunc, dis_mode)
+    p=d_apyori_preCal(t.d_data,t.header,distFunc, t.data_type)
     p.preCal_1item()
     for i in p.pre_1item:
         print(str(i)[0:100])

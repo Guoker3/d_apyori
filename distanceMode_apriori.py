@@ -4,6 +4,10 @@ origin : https://github.com/mattzheng/python-Apriori/blob/master/apriori2.py
 同时生成的表格之中，有每两对内容的：支持度、置信度、提升度
 """
 
+import preCal
+import loadData
+import numpy as np
+
 import sys
 
 from itertools import chain, combinations
@@ -17,10 +21,9 @@ def subsets(arr):
     """ Returns non empty subsets of arr"""
     return chain(*[combinations(arr, i + 1) for i, a in enumerate(arr)])
 
-
 def returnItemsWithMinSupport(itemSet, transactionList, minSupport, freqSet):
     """calculates the support for items in the itemSet and returns a subset
-   of the itemSet each of whose elements satisfies the minimum support"""
+    of the itemSet each of whose elements satisfies the minimum support"""
     _itemSet = set()
     localSet = defaultdict(int)
 
@@ -36,6 +39,28 @@ def returnItemsWithMinSupport(itemSet, transactionList, minSupport, freqSet):
 
         if support >= minSupport:
             _itemSet.add(item)
+
+    return _itemSet
+
+def returnItemsWithMinSupport_1itemLoop(itemSet, minSupport,freqSet,pre):
+    """calculates the support for items in the itemSet and returns a subset
+   of the itemSet each of whose elements satisfies the minimum support"""
+    _itemSet = set()
+    if np.array([x !='atom' for x in pre.mode]).all():
+        for item in itemSet:
+            support = sum(pre.pre_1item[str(int(list(item)[0]/3))]) / pre.data_inf['row_number']
+            if support >= minSupport:
+                _itemSet.add(item)
+    else:
+        pd=dict()
+        for di in pre.pre_1item:
+            ##TODO(robust) detect the same atom-key from different attribute and dicard the mistake
+            pd.update(di)
+        for item in itemSet:
+            support = sum(pd[list(item)[0]]) / pre.data_inf['row_number']
+            if support >= minSupport:
+                freqSet[item] = support
+                _itemSet.add(item)
 
     return _itemSet
 
@@ -57,7 +82,7 @@ def getItemSetTransactionList(data_iterator):
     return itemSet, transactionList
 
 
-def runApriori(data_iter, minSupport, minConfidence, minLift=0, tuples=2):
+def runApriori(data_iter,preClass, minSupport, minConfidence, minLift=0):
     """
     run the apriori algorithm. data_iter is a record iterator
     Return both:
@@ -74,20 +99,14 @@ def runApriori(data_iter, minSupport, minConfidence, minLift=0, tuples=2):
     assocRules = dict()
     # Dictionary which stores Association Rules
 
-    oneCSet = returnItemsWithMinSupport(itemSet,
-                                        transactionList,
-                                        minSupport,
-                                        freqSet)
+    oneCSet = returnItemsWithMinSupport_1itemLoop(itemSet,minSupport,freqSet,preClass)
 
     currentLSet = oneCSet
     k = 2
     while (currentLSet != set([])):
         largeSet[k - 1] = currentLSet
         currentLSet = joinSet(currentLSet, k)
-        currentCSet = returnItemsWithMinSupport(currentLSet,
-                                                transactionList,
-                                                minSupport,
-                                                freqSet)
+        currentCSet = returnItemsWithMinSupport(currentLSet,transactionList,minSupport,freqSet)
         currentLSet = currentCSet
         k = k + 1
 
@@ -95,102 +114,56 @@ def runApriori(data_iter, minSupport, minConfidence, minLift=0, tuples=2):
         """local function which Returns the support of an item"""
         return float(freqSet[item]) / len(transactionList)
 
-    print('Calculation the tuple words and support ... ')
-    toRetItems = []
-    for key, value in list(largeSet.items()):
-        toRetItems.extend([(tuple(item), getSupport(item))
-                           for item in value])
-
     toRetRules = []
     print('Calculation the pretuple words and confidence ... ')
     for key, value in list(largeSet.items())[1:]:
         for item in value:
-            if len(item) <= tuples:
-                _subsets = map(frozenset, [x for x in subsets(item)])
-                for element in _subsets:
-                    remain = item.difference(element)
-                    if len(remain) > 0:
-                        confidence = getSupport(item) / getSupport(element)
-                        # lift = getSupport(item)/( getSupport(element) * getSupport(remain))
-                        lift = confidence / getSupport(remain)
-                        self_support = getSupport(item)
-                        if self_support >= minSupport:
-                            if confidence >= minConfidence:
-                                if confidence >= minLift:
-                                    toRetRules.append(((tuple(element), tuple(remain)), tuple(item),
-                                                       self_support, confidence, lift))
-    return toRetItems, toRetRules
-
-
-def printResults(items, rules):
-    """prints the generated itemsets sorted by support and the confidence rules sorted by confidence"""
-    for item, support in sorted(items):
-        print("item: %s , %.3f" % (str(item), support))
-    print("\n------------------------ RULES:")
-    for rule, confidence in sorted(rules):
-        pre, post = rule
-        print("Rule: %s ==> %s , %.3f" % (str(pre), str(post), confidence))
-
-
-def dataFromFile(fname, extra=False):
-    """Function which reads from the file and yields a generator"""
-    if not extra:
-        # 不是本地读入
-        file_iter = open(fname, encoding='utf-8')
-        for line in file_iter:
-            line = line.strip().rstrip(',')  # Remove trailing comma
-            record = frozenset(line.split(','))
-            yield record
-    else:
-        for n in range(len(fname)):
-            record = frozenset(fname.ix[n, :])
-            yield record
-
-
-def transferDataFrame(items, rules, removal=True):
-    '''把内容转变为dataframe格式'''
-    # 无向
-    items_data = pd.DataFrame(items)
-    items_data.columns = ['word', 'support']
-    items_data['len'] = list(map(len, items_data.word))
-
-    # 有向
-    rules_data = pd.DataFrame(rules)
-    rules_data.columns = ['word', 'item', 'support', 'confidence', 'lift']
-    rules_data['word_x'] = list(map(lambda x: x[0][0] if len(x[0]) == 1 else x[0], rules_data.word))
-    rules_data['word_y'] = list(map(lambda x: x[1][0] if len(x[1]) == 1 else x[1], rules_data.word))
-    rules_data['item_len'] = list(map(len, rules_data['item']))
-
-    # 去重
-    if removal:
-        rules_data['word_xy'] = list(map(lambda x: ''.join(list(set([x[0][0], x[1][0]]))), rules_data.word))
-        rules_data = rules_data.drop_duplicates(['word_xy'])
-
-    return items_data, rules_data[['word_x', 'word_y', 'item', 'item_len', 'support', 'confidence', 'lift']]
-
+            _subsets = map(frozenset, [x for x in subsets(item)])
+            for element in _subsets:
+                remain = item.difference(element)
+                if len(remain) > 0:
+                    confidence = getSupport(item) / getSupport(element)
+                    # lift = getSupport(item)/( getSupport(element) * getSupport(remain))
+                    lift = confidence / getSupport(remain)
+                    self_support = getSupport(item)
+                    if self_support >= minSupport:
+                        if confidence >= minConfidence:
+                            if confidence >= minLift:
+                                toRetRules.append(((tuple(element), tuple(remain)), tuple(item),
+                                                   self_support, confidence, lift))
+    return toRetRules
 
 if __name__ == "__main__":
-    # ------------ 1 本地直接导入  ------------
-    inFile = dataFromFile('test9_11.csv', extra=False)
-    minSupport = 0.35
-    minConfidence = 0.3
-    items, rules = runApriori(inFile, minSupport, minConfidence, tuples=2)
-    #     - items (tuple, support)
-    #     - rules ((pretuple, posttuple), confidence)
+    t = loadData.d_apyori_cookDataSet()
+    dataset = None
+    dataset = 'small'
+    if dataset == 'small':
+        smallDataSet = [[0, 0, 'a',0], [1, 1, 'a',0], [0, 0, 'b',0], [0, 0, 'b',0], [0.1, 0.2, 'a',0], [0.87, 0, 'c',1]]
+        t.loadDataSet(smallDataSet, haveHeader=False)
+        func_tid1 = t.create_rTOx_DistanceFunc(raw_func='l_sigmoid', section_pick=[-100, 100])
+        func_tid2 = t.create_rTOx_DistanceFunc(raw_func='l_atom')
+        distFunc = [t.distanceFuncList[func_tid1], t.distanceFuncList[func_tid1], t.distanceFuncList[func_tid2],t.distanceFuncList[func_tid1]]
+    # dataset='luntai'
+    if dataset == 'luntai':
+        t.loadDataSet('test9_11.csv', haveHeader=True, data_set_cut=[0, 100])
+        func_tid = t.create_rTOx_DistanceFunc(raw_func='l_sigmoid', section_pick=[-100, 100])
+        distFunc = [t.distanceFuncList[func_tid], ] * len(t.header)
 
-    # ------------ 2 先编译再导入  ------------
-    #data = pd.read_csv('CoOccurrence_data_800.csv', header=None)
-    #inFile = dataFromFile(data[[1, 2]], extra=True)
-    #data_iter = dataFromFile(data[[1, 2]], extra=True)
-    # list(inFile)
-    #minSupport = 0.0
-    #minConfidence = 0.0
-    #minLift = 0.0
-    #items, rules = runApriori(inFile, minSupport, minConfidence, minLift, tuples=2)
-    #print('--------items number is: %s , rules number is : %s--------' % (len(items), len(rules)))
+    t.normalization()
+    t.division()
+    p = preCal.d_apyori_preCal(t.d_data, t.header, distFunc, t.data_type)
+    p.preCal_1item()
+
+    minSupport = 0
+    minConfidence = 0
+    rules = runApriori(t.d_data, p, minSupport, minConfidence)
+    #     - items (tuple, support)
+    #     - rules ((pretuple, posttuple),support, confidence, lift)
+
 
     # ------------ print函数 ------------
-    printResults(items, rules)
+    #for i in range(len(items)):
+    #print(items)
+    for i in rules:
+        print(i)
 
-    # ------------ dataframe------------
-    items_data, rules_data = transferDataFrame(items, rules)
