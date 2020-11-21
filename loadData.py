@@ -22,6 +22,9 @@ class d_apyori_cookDataSet:
         self.header = None
         self.r_data = None
 
+        self.data_type =None
+        #make str-like type work. for stepmode, just transfer the data. and for distancemode, it's need to transfer this attribute
+
         self.n_data = None
         self.n_data_inf = dict()
 
@@ -38,35 +41,59 @@ class d_apyori_cookDataSet:
                 # print(csvName, " header : ", header)
             for row in csv_reader:
                 data.append(row)
-        self.r_data = [[float(x) for x in row] for row in data]
-        print("csv loaded")
+        return data
 
     def loadDataSet(self, fileName, haveHeader, myEncoding='utf-8',data_set_cut=None):
-        ##TODO(better branch Jump Point 0) make algorithm can deal with atom-type()
         """
         :param
             data_set_cut:[a,b] pick part of the data_set_cut
         :argument
-            all data must in format of digit whcih can be(float())
-            when value of str-like are not too many(will not be missed when take round())
-                reflect the str-like things averagely to float and set a [0, 0,..., 0, 0] steplen or func(x=x0 -> 1, else 0)
+            it's better to use data all of float,but you can use str-like type(be signed as atom in this algorithm
+            ,and pay attention to make a distance function for atom attribute (reference to l_atom in baseDistanceFunc))
         """
 
         if type(fileName) == type(list()):
+            self.data_type=list()
+            for i in fileName[0]:
+                try:
+                    a = float(i)
+                    self.data_type.append('insolate')
+                except:
+                    self.data_type.append('atom')
             self.r_data = fileName
             return
 
         self.fileName = fileName
         if fileName[-4:] == '.csv':
-            self.__loadCSV(fileName, haveHeader=haveHeader, myEncoding=myEncoding)
+            data=self.__loadCSV(fileName, haveHeader=haveHeader, myEncoding=myEncoding)
         else:
             raise TypeError('unknown kind of files')
+
+        self.data_type=list()
+        for i in data[0]:
+            try:
+                a=float(i)
+                self.data_type.append('insolate')#default to insolate, can be change to linked if need
+            except:
+                self.data_type.append('atom')
+
+        pd_data=pd.DataFrame(data)
+        n=0
+        for column in pd_data.columns:
+            if self.data_type[n] == 'insolate':
+                se=pd.Series([float(x) for x in pd_data[column]])
+            else:
+                se=pd_data[column]
+            pd_data[column]=se
+            n=n+1
+        self.r_data=pd_data.values.tolist()
+        #self.r_data = [[float(x) for x in row] for row in data]
 
         if data_set_cut != None:
             self.r_data=self.r_data[data_set_cut[0]: data_set_cut[1]]
 
     def flattenBEFOREnormalization(self):
-        pass  ##TODO(extra precision optimazation) complete this function
+        pass  ##TODO(extra flatten) complete this function
 
     def normalization(self):
         """:argument
@@ -81,15 +108,17 @@ class d_apyori_cookDataSet:
         n_inf_min = []
         n_inf_range = []
         for i in range(len(self.r_data[0])):
-            minData = np.min(pd_r_data[self.header[i]].tolist())
-            n_inf_min.append(minData)
-            t_range = np.max(pd_r_data[self.header[i]].to_list()) - minData
-            n_inf_range.append(t_range)
-
-            def normalization(number):
-                return (number - minData) / t_range
-
-            pd_r_data[self.header[i]] = pd.Series([normalization(x) for x in pd_r_data[self.header[i]].tolist()])
+            if self.data_type[i] != 'atom':
+                l=pd_r_data[self.header[i]].tolist()
+                minData = np.min(l)
+                n_inf_min.append(minData)
+                t_range = np.max(l) - minData
+                n_inf_range.append(t_range)
+                
+                pd_r_data[self.header[i]] = pd.Series([(x-minData)/t_range for x in l])
+            else:
+                n_inf_min.append(None)
+                n_inf_range.append((None))
         self.n_data_inf['min'] = n_inf_min
         self.n_data_inf['range'] = n_inf_range
         self.n_data = pd_r_data.values.tolist()
@@ -106,12 +135,13 @@ class d_apyori_cookDataSet:
         divideStep = 3
         pd_n_data = pd.DataFrame(self.r_data, columns=self.header)
         for i in range(len(self.r_data[0])):
-            pd_n_data[self.header[i]] = pd.Series([x + divideStep * i for x in pd_n_data[self.header[i]].tolist()])
+            if self.data_type[i] != 'atom':
+                pd_n_data[self.header[i]] = pd.Series([x + divideStep * i for x in pd_n_data[self.header[i]].tolist()])
         self.d_data = pd_n_data.values.tolist()
         print('data divided')
 
-    def quickStart_stepmode(self, fileName='test9_11.csv', haveHeader=True):
-        self.loadDataSet(fileName=fileName, haveHeader=haveHeader)
+    def quickStart_stepmode(self, fileName='test9_11.csv', haveHeader=True,data_set_cut_in=[0,100]):
+        self.loadDataSet(fileName=fileName, haveHeader=haveHeader,data_set_cut=data_set_cut_in)
         self.normalization()
         self.division()
         print('quick started')

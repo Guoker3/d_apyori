@@ -42,16 +42,13 @@ class d_apyori_preCal:
                 for r in se_t_2:
                     dl.append(distFuncIn(r, i))
                 self.pre_1item[tid][i] = dl
-        if mode == 'linked':
+        elif mode == 'linked':
             for i in se_t:
                 dl = list()
                 data=deepcopy(self.data)
                 for R in data:
                     dl.append(distFuncIn(R, i))
                 self.pre_1item[tid][i] = dl
-        if mode == 'atom':
-            ##TODO(Jump Point 1) atom
-            raise Exception('atom branch is not wrote yet')
 
         print('1item precal (tid) complete : ', tid, '/', self.data_inf['column_number']-1, 'cost time : ', time.time()-time_t)
 
@@ -82,12 +79,23 @@ class d_apyori_preCal:
 
 if __name__ == '__main__':
     t = loadData.d_apyori_cookDataSet()
-    t.loadDataSet('test9_11.csv', haveHeader=True,data_set_cut=[0,100])
+    dataset = None
+    dataset='small'
+    if dataset == 'small':
+        smallDataSet=[[0,0,'a'],[1,1,'a'],[0,0,'b'],[0,0,'b'],[0.1,0.2,'a'],[0.87,0,'c']]
+        t.loadDataSet(smallDataSet,haveHeader=False)
+        func_tid1 = t.create_rTOx_DistanceFunc(raw_func='l_sigmoid', section_pick=[-100, 100])
+        func_tid2 = t.create_rTOx_DistanceFunc(raw_func='l_atom')
+        distFunc=[t.distanceFuncList[func_tid1],t.distanceFuncList[func_tid1],t.distanceFuncList[func_tid2]]
+    #dataset='luntai'
+    if dataset == 'luntai':
+        t.loadDataSet('test9_11.csv', haveHeader=True,data_set_cut=[0,100])
+        func_tid = t.create_rTOx_DistanceFunc(raw_func='l_sigmoid',section_pick=[-100,100])
+        distFunc=[t.distanceFuncList[func_tid],] * len(t.header)
+
     t.normalization()
     t.division()
 
-    func_tid = t.create_rTOx_DistanceFunc(raw_func='l_sigmoid',section_pick=[-100,100])
-    distFunc=[t.distanceFuncList[func_tid],] * len(t.header)
     dis_mode=['insolate', ] * len(t.header)
     p=d_apyori_preCal(t.d_data,t.header,distFunc, dis_mode)
     p.preCal_1item()

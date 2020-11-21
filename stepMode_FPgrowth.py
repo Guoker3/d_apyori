@@ -145,6 +145,8 @@ class Fp_growth():
         freqItemSet = set()
         support_data = {}
         tree_header, headerTable = self.create_fptree(data_set, min_support, flag=True)  # 创建数据集的fptree
+        if tree_header == None:
+            return None,None
         # 创建各频繁一项的fptree，并挖掘频繁项并保存支持度计数
         self.create_cond_fptree_brute(headerTable, min_support, set(), freqItemSet, support_data)
 
@@ -162,6 +164,8 @@ class Fp_growth():
 
     def generate_R_brute(self, data_set, min_support, min_conf):
         L, support_data = self.generate_L(data_set, min_support)
+        if L == None:
+            return None
         rule_list = []
         sub_set_list = []
         for i in range(0, len(L)):
@@ -282,6 +286,8 @@ class Fp_growth():
         freqItemSet = set()
         support_data = {}
         tree_header, headerTable = self.create_fptree(data_set, min_support, flag=True)  # 创建数据集的fptree
+        if tree_header == None:
+            return None,None
         #print('T:',tree_header)
         #print('H:',headerTable)
         # 创建各频繁一项的fptree，并挖掘频繁项并保存支持度计数
@@ -302,7 +308,8 @@ class Fp_growth():
                 support_data : dictionary about {frequent set : support counts}
         """
         L, support_data = self.generate_L(data_set, min_support)
-
+        if L == None:
+            return None
         #print('L:',L)
         #for i in support_data.items():
         #    print('S:',i)
@@ -326,7 +333,7 @@ class Fp_growth():
 
 
 if __name__ == "__main__":
-    min_support_param = 25  # 最小支持度
+    min_support_param = 1  # 最小支持度
     min_conf = 0.7  # 最小置信度
 
     from step_mode import *
@@ -334,54 +341,63 @@ if __name__ == "__main__":
 
     dataSet = d_apyori_cookDataSet()
 
-    dataChoice='luntai'
-    #dataChoice='small'
+    #dataChoice='luntai'
+    dataChoice='small'
 
     if dataChoice=='luntai':
-        dataSet.quickStart(fileName='test9_11.csv', haveHeader=True)
-        dif_list = [60,90, 100, 90,60]
+        dataSet.quickStart_stepmode(fileName='test9_11.csv', haveHeader=True,data_set_cut_in=[0,10])
+        dif_list = [6,9, 10, 9,6]
         dif_step=[[-0.2,-0.1, 0, 0.1,0.2], ] * len(dataSet.n_data[0])
         new_min_support = int(min_support_param * sum(dif_list))
         print('support selected in luntai : ', new_min_support)
 
     if dataChoice=='small':
         #easyDataSet=[[0,0,0],[0,0,1]]
-        easyDataSet=[[0,0,0],[1,1,1],[0,0,0.22],[0,0,0.7],[0.1,0.2,0.3],[0.87,0,0.22]]
+        easyDataSet=[[0,0,'a'],[1,1,'a'],[0,0,'b'],[0,0,'b'],[0.1,0.2,'a'],[0.87,0,'c']]
         dataSet.quickStart_stepmode(fileName=easyDataSet,haveHeader=False)
 
         #dif_list=[1000,30000,1000]
         dif_list=[1000,2000,3000,4000,5000,6000,7000,6000,5000,4000,3000,2000,1000]
-        dif_step = [[-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0,0.1,0.2,0.3,0.4,0.5,0.6], ] * len(dataSet.n_data[0])
+        dif_step = [[-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0,0.1,0.2,0.3,0.4,0.5,0.6], ] * (len(dataSet.n_data[0])-1)
+        dif_step.append([0,0,0,0,0,0,0,0,0,0,0,0,0])
         #dif_list = [1,]
         #dif_step=[[0,], ] * len(dataSet.n_data[0])
         min_conf=0.5
         new_min_support = 2
     mode = None
-    #mode = 'brute'
+    mode = 'brute'
     time_b_s=time.time()
-    print('****************\n******************* brute ******************\n***************************')
     if mode == 'brute':
+        print('****************\n******************* brute ******************\n***************************')
         dataSet_b = stepDiffusion(dataSet.d_data, dif_list, dif_step, mode='brute')
-        dataSet_b = [[str(round(x, 2)) for x in row] for row in dataSet_b]
+        dataSet_b = [[str(round(x, 2)) for x in row if isinstance(x,float)] for row in dataSet_b]
         fp = Fp_growth(Mode='brute')
         rule_list = fp.generate_R(dataSet_b, new_min_support, min_conf)
-        for i in rule_list:
-            print(i)
-        print('number of results',len(rule_list))
+        if rule_list == None:
+            print('no result found')
+        else:
+            for i in rule_list:
+                print(i)
+                print('number of results',len(rule_list))
     time_b=time.time()-time_b_s
     time_w_s=time.time()
-    print('****************\n******************* weight ******************\n***************************')
     mode ='weight'
     if mode == 'weight':
+        print('****************\n******************* weight ******************\n***************************')
         dataSet_w = stepDiffusion(dataSet.d_data, dif_list, dif_step, mode='weight')
         for r in range(len(dataSet_w)):
-            dataSet_w[r][0] = [str(round(x,2)) for x in dataSet_w[r][0]]
+            dataSet_w[r][0] = [str(round(x,2)) for x in dataSet_w[r][0] if isinstance(x,float)]
         fp = Fp_growth(Mode='weight')
         rule_list = fp.generate_R(dataSet_w, new_min_support, min_conf)
-        for i in rule_list:
-            print('rule',i)
-        print('number of results:',len(rule_list))
-        print('total diffuse number : ',sum(dif_list) )
+        if rule_list == None:
+            print('no result found')
+        else:
+            for i in rule_list:
+                print(i)
+                print('number of results',len(rule_list))
+            print('number of results:',len(rule_list))
+            print('total diffuse number : ',sum(dif_list) )
+    print('*************************common inf*************************************')
     time_w=time.time()-time_w_s
     print('brute time : ',time_b)
     print('weight time : ',time_w)
