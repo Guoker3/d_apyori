@@ -42,6 +42,7 @@ class d_apyori_cookDataSet:
         print("csv loaded")
 
     def loadDataSet(self, fileName, haveHeader, myEncoding='utf-8',data_set_cut=None):
+        ##TODO(better branch Jump Point 0) make algorithm can deal with atom-type()
         """
         :param
             data_set_cut:[a,b] pick part of the data_set_cut
@@ -129,6 +130,13 @@ class d_apyori_cookDataSet:
             b=1/a
             return 1 - (a - b) / (a + b)
         funcChoice['l_tanh'] = l_tanh
+
+        def l_atom(r,x):
+            if r==x:
+                return 1
+            else:
+                return 0
+        funcChoice['l_atom'] = l_atom
 
         return funcChoice
 

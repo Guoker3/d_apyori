@@ -6,14 +6,14 @@ import threading
 import time
 
 class d_apyori_preCal:
-    def __init__(self, dividedData, dataHeader, fault_distanceFunction =None ,modeList='insolate'):
+    def __init__(self, dividedData, dataHeader, fault_distanceFunction =None ,modeList=None):
         """
         :param
             dividedData: format-dataset(d_data in d_apyori_cookDataSet)
             distanceFunction: list of distance for all attributes
             mode:list of column data distance attribute,['insolate'] can be 'insolate' or 'linked' or 'atom'
         """
-        if isinstance(modeList,str):
+        if modeList is None:
             self.mode = [modeList, ] * len(dataHeader)
         elif isinstance(modeList,list):
             self.mode = modeList
@@ -49,6 +49,9 @@ class d_apyori_preCal:
                 for R in data:
                     dl.append(distFuncIn(R, i))
                 self.pre_1item[tid][i] = dl
+        if mode == 'atom':
+            ##TODO(Jump Point 1) atom
+            raise Exception('atom branch is not wrote yet')
 
         print('1item precal (tid) complete : ', tid, '/', self.data_inf['column_number']-1, 'cost time : ', time.time()-time_t)
 
@@ -85,7 +88,8 @@ if __name__ == '__main__':
 
     func_tid = t.create_rTOx_DistanceFunc(raw_func='l_sigmoid',section_pick=[-100,100])
     distFunc=[t.distanceFuncList[func_tid],] * len(t.header)
-    p=d_apyori_preCal(t.d_data,t.header,distFunc, mode = ['insolate', ] * len(t.header))
+    dis_mode=['insolate', ] * len(t.header)
+    p=d_apyori_preCal(t.d_data,t.header,distFunc, dis_mode)
     p.preCal_1item()
     for i in p.pre_1item:
         print(str(i)[0:100])
