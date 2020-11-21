@@ -41,7 +41,16 @@ class d_apyori_cookDataSet:
         self.r_data = [[float(x) for x in row] for row in data]
         print("csv loaded")
 
-    def loadDataSet(self, fileName, haveHeader, myEncoding='utf-8'):
+    def loadDataSet(self, fileName, haveHeader, myEncoding='utf-8',data_set_cut=None):
+        """
+        :param
+            data_set_cut:[a,b] pick part of the data_set_cut
+        :argument
+            all data must in format of digit whcih can be(float())
+            when value of str-like are not too many(will not be missed when take round())
+                reflect the str-like things averagely to float and set a [0, 0,..., 0, 0] steplen or func(x=x0 -> 1, else 0)
+        """
+
         if type(fileName) == type(list()):
             self.r_data = fileName
             return
@@ -51,6 +60,9 @@ class d_apyori_cookDataSet:
             self.__loadCSV(fileName, haveHeader=haveHeader, myEncoding=myEncoding)
         else:
             raise TypeError('unknown kind of files')
+
+        if data_set_cut != None:
+            self.r_data=self.r_data[data_set_cut[0]: data_set_cut[1]]
 
     def flattenBEFOREnormalization(self):
         pass  ##TODO(extra precision optimazation) complete this function
@@ -176,6 +188,7 @@ class d_apyori_cookDataSet:
         _len_dis=len(self.distanceFuncList)
         self.distanceFuncList.append(_func)
         print("new func saved in self.distanceFuncList ,position : ", _len_dis)
+        return _len_dis
 
     def preCal_1itemDistance(self, distance_func_list=None, attr_insolate=True):
         """
