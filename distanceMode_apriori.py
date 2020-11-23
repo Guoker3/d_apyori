@@ -21,25 +21,38 @@ def subsets(arr):
     """ Returns non empty subsets of arr"""
     return chain(*[combinations(arr, i + 1) for i, a in enumerate(arr)])
 
-def returnItemsWithMinSupport(itemSet, transactionList, minSupport, freqSet):
-    """calculates the support for items in the itemSet and returns a subset
-    of the itemSet each of whose elements satisfies the minimum support"""
-    _itemSet = set()
-    localSet = defaultdict(int)
-
-    for item in itemSet:
-        # time cost
-        for transaction in transactionList:
-            if item.issubset(transaction):
-                freqSet[item] += 1
-                localSet[item] += 1
-
-    for item, count in list(localSet.items()):
-        support = float(count) / len(transactionList)
-
-        if support >= minSupport:
-            _itemSet.add(item)
-
+def returnItemsWithMinSupport(itemSet, pClass, minSupport, freqSet):
+    """
+    calculates the support for items in the itemSet and returns a subset
+    of the itemSet each of whose elements satisfies the minimum support
+    """
+    """for i in range(1):
+        transactionList=pClass.data.values.tolist()
+        _itemSet = set()
+        localSet = defaultdict(int)
+        for item in itemSet:
+            # time cost
+            for transaction in transactionList:
+                if item.issubset(transaction):
+                    freqSet[item] += 1
+                    localSet[item] += 1
+        for item, count in list(localSet.items()):
+            support = float(count) / len(transactionList)
+            if support >= minSupport:
+                _itemSet.add(item)
+        return _itemSet
+    """
+    _itemSet=set()
+    for items in itemSet:
+        itemSet_iter=iter(items)
+        item=itemSet_iter.__next__()
+        D=pClass.pre_1item[int(item/3)][item]
+        for item in itemSet_iter:
+            D = D * pClass.pre_1item[int(item/3)][item]
+        support = sum(D) /pClass.data_inf['row_number']
+        if support >=minSupport:
+            _itemSet.add(items)
+            freqSet[items] = support
     return _itemSet
 
 def returnItemsWithMinSupport_1itemLoop(itemSet, minSupport,freqSet,pre):
@@ -48,9 +61,11 @@ def returnItemsWithMinSupport_1itemLoop(itemSet, minSupport,freqSet,pre):
     _itemSet = set()
     if np.array([x !='atom' for x in pre.mode]).all():
         for item in itemSet:
-            support = sum(pre.pre_1item[str(int(list(item)[0]/3))]) / pre.data_inf['row_number']
+            f_item=list(item)[0]
+            support = sum(pre.pre_1item[int(f_item/3)][f_item]) / pre.data_inf['row_number']
             if support >= minSupport:
                 _itemSet.add(item)
+                freqSet[item] = support
     else:
         pd=dict()
         for di in pre.pre_1item:
@@ -61,12 +76,11 @@ def returnItemsWithMinSupport_1itemLoop(itemSet, minSupport,freqSet,pre):
             if support >= minSupport:
                 freqSet[item] = support
                 _itemSet.add(item)
-
-    return _itemSet
-
+    return _itemSet,freqSet
 
 def joinSet(itemSet, length):
     """Join a set with itself and returns the n-element itemsets"""
+    ##TODO(speed) cut more branch
     return set([i.union(j) for i in itemSet for j in itemSet if len(i.union(j)) == length])
 
 
@@ -89,30 +103,29 @@ def runApriori(data_iter,preClass, minSupport, minConfidence, minLift=0):
      - items (tuple, support)
      - rules ((pretuple, posttuple), confidence)
     """
-    itemSet, transactionList = getItemSetTransactionList(data_iter.values.tolist())
-
-    freqSet = defaultdict(int)
+    itemSet = [frozenset([x,]) for y in data_iter.values.tolist() for x in y]
+    #freqSet = defaultdict(int)
+    freqSet = dict()
     largeSet = dict()
-    # Global dictionary which stores (key=n-itemSets,value=support)
-    # which satisfy minSupport
 
-    assocRules = dict()
-    # Dictionary which stores Association Rules
-
-    oneCSet = returnItemsWithMinSupport_1itemLoop(itemSet,minSupport,freqSet,preClass)
-
+    oneCSet,freqSet = returnItemsWithMinSupport_1itemLoop(itemSet,minSupport,freqSet,preClass)
     currentLSet = oneCSet
+
     k = 2
-    while (currentLSet != set([])):
+    while (currentLSet != set([])) and k < preClass.data_inf['column_number']:
+        print('itemSet number : ',k)
         largeSet[k - 1] = currentLSet
         currentLSet = joinSet(currentLSet, k)
-        currentCSet = returnItemsWithMinSupport(currentLSet,transactionList,minSupport,freqSet)
+        print('itemset length ',k,' has',len(currentLSet),' items')
+        currentCSet = returnItemsWithMinSupport(currentLSet, preClass, minSupport, freqSet)
         currentLSet = currentCSet
         k = k + 1
 
+    print('calculate completed screening......')
+
     def getSupport(item):
         """local function which Returns the support of an item"""
-        return float(freqSet[item]) / len(transactionList)
+        return freqSet[item] / preClass.data_inf['row_number']
 
     toRetRules = []
     print('Calculation the pretuple words and confidence ... ')
@@ -136,16 +149,16 @@ def runApriori(data_iter,preClass, minSupport, minConfidence, minLift=0):
 if __name__ == "__main__":
     t = loadData.d_apyori_cookDataSet()
     dataset = None
-    dataset = 'small'
+    #dataset = 'small'
     if dataset == 'small':
         smallDataSet = [[0, 0, 'a',0], [1, 1, 'a',0], [0, 0, 'b',0], [0, 0, 'b',0], [0.1, 0.2, 'a',0], [0.87, 0, 'c',1]]
         t.loadDataSet(smallDataSet, haveHeader=False)
         func_tid1 = t.create_rTOx_DistanceFunc(raw_func='l_sigmoid', section_pick=[-100, 100])
         func_tid2 = t.create_rTOx_DistanceFunc(raw_func='l_atom')
         distFunc = [t.distanceFuncList[func_tid1], t.distanceFuncList[func_tid1], t.distanceFuncList[func_tid2],t.distanceFuncList[func_tid1]]
-    # dataset='luntai'
+    dataset='luntai'
     if dataset == 'luntai':
-        t.loadDataSet('test9_11.csv', haveHeader=True, data_set_cut=[0, 100])
+        t.loadDataSet('test9_11.csv', haveHeader=True, data_set_cut=[0, 10])
         func_tid = t.create_rTOx_DistanceFunc(raw_func='l_sigmoid', section_pick=[-100, 100])
         distFunc = [t.distanceFuncList[func_tid], ] * len(t.header)
 
@@ -162,8 +175,6 @@ if __name__ == "__main__":
 
 
     # ------------ print函数 ------------
-    #for i in range(len(items)):
-    #print(items)
     for i in rules:
         print(i)
 

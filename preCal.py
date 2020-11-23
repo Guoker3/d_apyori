@@ -41,16 +41,16 @@ class d_apyori_preCal:
                 dl = list()
                 for r in se_t_2:
                     dl.append(distFuncIn(r, i))
-                self.pre_1item[tid][i] = dl
+                self.pre_1item[tid][i] = pd.Series(dl)
         elif mode == 'linked':
             for i in se_t:
                 dl = list()
                 data=deepcopy(self.data)
                 for R in data:
                     dl.append(distFuncIn(R, i))
-                self.pre_1item[tid][i] = dl
+                self.pre_1item[tid][i] = pd.Series(dl)
 
-        print('1item precal (tid) complete : ', tid, '/', self.data_inf['column_number']-1, 'cost time : ', time.time()-time_t)
+        print('1item precal complete : tid:', tid, ' total:', self.data_inf['column_number']-1, 'cost time : ', time.time()-time_t)
 
     def preCal_1item(self,distFuncList=None):
         if distFuncList == None :
@@ -58,6 +58,8 @@ class d_apyori_preCal:
 
         data=deepcopy(self.data)
         n=0
+        #multi_threading is not rapid than excution sequence but not slow
+        #TODO(speed)can try other speed method such as distribute computing or flow.
         threadingPool = list()
         for column in data.columns:
             distFunc = distFuncList[n]
@@ -76,27 +78,26 @@ class d_apyori_preCal:
             count=count+1
             time.sleep(3)
 
-
 if __name__ == '__main__':
     t = loadData.d_apyori_cookDataSet()
     dataset = None
-    dataset='small'
+    dataset = 'small'
     if dataset == 'small':
         smallDataSet=[[0,0,'a'],[1,1,'a'],[0,0,'b'],[0,0,'b'],[0.1,0.2,'a'],[0.87,0,'c']]
         t.loadDataSet(smallDataSet,haveHeader=False)
         func_tid1 = t.create_rTOx_DistanceFunc(raw_func='l_sigmoid', section_pick=[-100, 100])
         func_tid2 = t.create_rTOx_DistanceFunc(raw_func='l_atom')
-        distFunc=[t.distanceFuncList[func_tid1],t.distanceFuncList[func_tid1],t.distanceFuncList[func_tid2]]
+        distFunc = [t.distanceFuncList[func_tid1],t.distanceFuncList[func_tid1],t.distanceFuncList[func_tid2]]
     #dataset='luntai'
     if dataset == 'luntai':
-        t.loadDataSet('test9_11.csv', haveHeader=True,data_set_cut=[0,100])
+        t.loadDataSet('test9_11.csv', haveHeader=True, data_set_cut=[0,100])
         func_tid = t.create_rTOx_DistanceFunc(raw_func='l_sigmoid',section_pick=[-100,100])
-        distFunc=[t.distanceFuncList[func_tid],] * len(t.header)
+        distFunc = [t.distanceFuncList[func_tid],] * len(t.header)
 
     t.normalization()
     t.division()
 
-    p=d_apyori_preCal(t.d_data,t.header,distFunc, t.data_type)
+    p=d_apyori_preCal(t.d_data, t.header, distFunc, t.data_type)
     p.preCal_1item()
     for i in p.pre_1item:
         print(str(i)[0:100])
