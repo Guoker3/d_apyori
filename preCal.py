@@ -30,6 +30,7 @@ class d_apyori_preCal:
             self.pre_1item = list()
             for i in range(self.data_inf['column_number']):
                 self.pre_1item.append(dict())
+            self.pre_1item_uni_dict = dict()
         else:
             raise ValueError('list no in format')
 
@@ -77,6 +78,10 @@ class d_apyori_preCal:
             th.start()
             count=count+1
             time.sleep(3)
+
+        if np.array([x == 'atom' for x in self.mode]).any():
+            for di in self.pre_1item:
+                self.pre_1item_uni_dict.update(di)
 
 if __name__ == '__main__':
     t = loadData.d_apyori_cookDataSet()

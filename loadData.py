@@ -137,6 +137,8 @@ class d_apyori_cookDataSet:
         for i in range(len(self.r_data[0])):
             if self.data_type[i] != 'atom':
                 pd_n_data[self.header[i]] = pd.Series([x + divideStep * i for x in pd_n_data[self.header[i]].tolist()])
+            else:
+                pd_n_data[self.header[i]] = pd.Series([str(divideStep * i)+' ' + str(x) for x in pd_n_data[self.header[i]].tolist()])
         self.d_data = pd_n_data.values.tolist()
         print('data divided')
 
@@ -184,7 +186,7 @@ class d_apyori_cookDataSet:
             print('you can choose some builtin funcs or write one in')
             print('builtin funcs:')
             print('\n'.join(funcChoice.keys()))
-        elif  raw_func == None and isinstance(section_pick, dict):
+        elif raw_func == None and isinstance(section_pick, dict):
             _func = None
         elif type(raw_func) == type('str'):
             _func = funcChoice[raw_func]
@@ -209,7 +211,6 @@ class d_apyori_cookDataSet:
             _func = s_func
         #R to x
         elif isinstance(section_pick,dict):
-            value_t=list()
             tid_func=deepcopy(section_pick)
 
             def s_func(R,x):
