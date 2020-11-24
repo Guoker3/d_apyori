@@ -92,8 +92,8 @@ class d_apyori_cookDataSet:
         if data_set_cut != None:
             self.r_data=self.r_data[data_set_cut[0]: data_set_cut[1]]
 
-    def flattenBEFOREnormalization(self):
-        pass  ##TODO(extra flatten) complete this function
+    def flattenBEFOREnormalization_stepmode(self):
+        pass  ##TODO(extra flatten stepMode) complete this function
 
     def normalization(self):
         """:argument
@@ -149,7 +149,7 @@ class d_apyori_cookDataSet:
         print('quick started')
 
     def baseDistanceFunc(self):
-        ##TODO(extra toolkit) add func choice
+        ##TODO(extra toolkit) add func choice and put more math on it
         funcChoice=dict()
 
         def l_sigmoid(r,x):
@@ -196,6 +196,7 @@ class d_apyori_cookDataSet:
         # reflect func to section if select
         if section_pick == None:
             pass
+
         #r to x
         elif isinstance(section_pick,list) and len(section_pick) == 2:
             a, b = section_pick
@@ -209,16 +210,17 @@ class d_apyori_cookDataSet:
                 return d
 
             _func = s_func
-        #R to x
+
+        #R to x, float only
         elif isinstance(section_pick,dict):
             tid_func=deepcopy(section_pick)
 
             def s_func(R,x):
-                D=0
-                num=0
+                D = 0
+                num = 0
                 for tid in tid_func.keys():
-                    D=tid_func[tid](R[tid] % 3, x % 3)+D
-                    num=num+1
+                    D = tid_func[tid](R[tid] % 3, x % 3)+D
+                    num = num+1
                 return D/num
 
             _func=s_func

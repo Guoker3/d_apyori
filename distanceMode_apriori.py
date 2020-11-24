@@ -201,6 +201,7 @@ if __name__ == "__main__":
     p = preCal.d_apyori_preCal(t.d_data, t.header, distFunc, t.data_type)
     p.preCal_1item()
     ##TODO(important speed) make a list of minSupport to deal with items-boommm
+    ##TODO(importtant development) make minsupport-threhold be a relative thing.
     minSupport = 0
     minConfidence = 0
     rules = runApriori(p.data, p, minSupport, minConfidence)

@@ -59,8 +59,7 @@ class d_apyori_preCal:
 
         data=deepcopy(self.data)
         n=0
-        #multi_threading is not rapid than excution sequence but not slow
-        #TODO(speed)can try other speed method such as distribute computing or flow.
+        #TODO(speed)can try other speed method such as distribute computing or flow or join the Series together to make it worth in GPU.
         threadingPool = list()
         for column in data.columns:
             distFunc = distFuncList[n]
