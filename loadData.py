@@ -212,6 +212,8 @@ class d_apyori_cookDataSet:
             _func = s_func
 
         #R to x, float only
+        #assume that x separately associate with the attribute in R
+        ##TODO(advanced) with topology or something, make all attributes in a pluralistic function,and make it more forward-useful
         elif isinstance(section_pick,dict):
             tid_func=deepcopy(section_pick)
 
