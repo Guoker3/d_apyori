@@ -130,7 +130,7 @@ def getItemSetTransactionList(data_iterator):
     return itemSet, transactionList
 
 
-def runApriori(data_iter,preClass, minSupport, minConfidence, minLift=0):
+def runApriori(data_iter,preClass, minSupport, minConfidence, minLift=0,itemNumberLimit=-1):
     """
     run the apriori algorithm. data_iter is a record iterator
     Return both:
@@ -146,7 +146,9 @@ def runApriori(data_iter,preClass, minSupport, minConfidence, minLift=0):
     currentLSet = oneCSet
 
     k = 2
-    while (currentLSet != set([])) and k < preClass.data_inf['column_number']:
+    while ((currentLSet != set([])) and k < preClass.data_inf['column_number']):
+        if k==itemNumberLimit+2:
+            break
         print('itemSet number : ',k)
         largeSet[k - 1] = currentLSet
         currentLSet = joinSet(currentLSet, k,preClass)
