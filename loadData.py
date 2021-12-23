@@ -133,7 +133,7 @@ class d_apyori_cookDataSet:
         if self.header == None:
             self.header = [x for x in range(len(self.r_data[0]))]
         divideStep = 3
-        pd_n_data = pd.DataFrame(self.r_data, columns=self.header)
+        pd_n_data = pd.DataFrame(self.n_data, columns=self.header)
         for i in range(len(self.r_data[0])):
             if self.data_type[i] != 'atom':
                 pd_n_data[self.header[i]] = pd.Series([x + divideStep * i for x in pd_n_data[self.header[i]].tolist()])
