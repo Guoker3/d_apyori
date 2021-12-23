@@ -246,9 +246,12 @@ class d_apyori_cookDataSet:
         ##TODO to filter the needed data from d_data
         pass
 
-def plotFunc(func,scale='single'):
+def plotFunc(func,title=None,scale='single'):
     if scale == 'single':
-        plt.title(func.__name__)
+        if title==None:
+            plt.title(func.__name__)
+        else:
+            plt.title(title)
         x1=np.arange(-3,-1,0.01)
         y1=[func(xx,0) for xx in x1]
         x2=np.arange(1,3,0.01)
