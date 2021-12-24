@@ -47,9 +47,9 @@ def returnItemsWithMinSupport(itemSet, pClass, minSupport, freqSet):
         for items in itemSet:
             itemSet_iter=iter(items)
             item=itemSet_iter.__next__()
-            D=pClass.pre_1item[int(item/3)][item]
+            D=pClass.pre_1item[int((1+item)/3)][(item,)]
             for item in itemSet_iter:
-                D = D * pClass.pre_1item[int(item/3)][item]
+                D = D * pClass.pre_1item[int((1+item)/3)][(item,)]
             support = sum(D) /pClass.data_inf['row_number']
             if support >=minSupport:
                 _itemSet.add(items)
@@ -74,7 +74,7 @@ def returnItemsWithMinSupport_1itemLoop(itemSet, minSupport,freqSet,pre):
     if np.array([x !='atom' for x in pre.mode]).all():
         for item in itemSet:
             f_item=list(item)[0]
-            support = sum(pre.pre_1item[int(f_item/3)][f_item]) / pre.data_inf['row_number']
+            support = sum(pre.pre_1item[int((f_item+1)/3)][(f_item,)]) / pre.data_inf['row_number']
             if support >= minSupport:
                 _itemSet.add(item)
                 freqSet[item] = support
@@ -162,7 +162,7 @@ def runApriori(data_iter,preClass, minSupports, minConfidence, minLift=0,itemNum
         if type(minSupports) == type(iter([0,])):
             minSupport = next(minSupports)
             print("minSupport: ",minSupport)
-        currentCSet = returnItemsWithMinSupport(currentLSet, preClass, minSupport, freqSet)
+        currentCSet= returnItemsWithMinSupport(currentLSet, preClass, minSupport, freqSet)
         currentLSet = currentCSet
         k = k + 1
 
@@ -173,6 +173,9 @@ def runApriori(data_iter,preClass, minSupports, minConfidence, minLift=0,itemNum
         return freqSet[item] / preClass.data_inf['row_number']
 
     toRetRules = []
+    if type(minSupports) == type(iter([0, ])):
+        minSupport = next(minSupports)
+        print("filter minSupport: ", minSupport)
     print('Calculation the pretuple words and confidence ... ')
     for key, value in list(largeSet.items())[1:]:
         for item in value:
@@ -184,14 +187,12 @@ def runApriori(data_iter,preClass, minSupports, minConfidence, minLift=0,itemNum
                     # lift = getSupport(item)/( getSupport(element) * getSupport(remain))
                     lift = confidence / getSupport(remain)
                     self_support = getSupport(item)
-                    print("\r\tin time support: "+str(self_support),end="")
                     #make breakpoint here to check the proper paramater
                     if self_support >= minSupport:
                         if confidence >= minConfidence:
                             if confidence >= minLift:
                                 toRetRules.append(((tuple(element), tuple(remain)),
                                                    self_support, confidence, lift))
-    print("")
     return toRetRules
 
 if __name__ == "__main__":

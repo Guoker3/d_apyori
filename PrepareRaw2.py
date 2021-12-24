@@ -4,6 +4,8 @@ from distanceMode_apriori import *
 from matplotlib import pyplot as plt
 import copy
 import aprioriRule as ar
+import time
+
 def createDataset(name):
     data=ld.d_apyori_cookDataSet()
     data.loadDataSet(name,haveHeader=True)
@@ -42,6 +44,7 @@ def plotFunc(funcs,title):
         i+=1
 
 if __name__=="__main__":
+    time=time.time()
     controlFlag=list()
     #controlFlag.append("plotData")
     #controlFlag.append("plotFunc")
@@ -69,29 +72,22 @@ if __name__=="__main__":
         plotFunc(distFunc,data.header)
 
     if "chooseRow" in controlFlag:
-        dataIn=list()
-        dataHeaderIn=list()
-        dataTypeIn=list()
-        for line in data.d_data:
-            l=list()
-            for i in chosedRow:
-                l.append(line[i])
-            dataIn.append(l)
-        for i in chosedRow:
-            dataHeaderIn.append(data.header[i])
-            dataTypeIn.append(data.data_type[i])
+        dataIn,dataHeaderIn,dataTypeIn=data.chooseRow(data,chosedRow=chosedRow)
+        dataIn = dataIn[0:300]  # change here if need to control the line number of dataset
     else:
-        dataIn=data.d_data
-        dataHeaderIn=data.header
-
+        dataIn = data.d_data
+        #dataIn=dataIn[0:20]    #change here if need to control the line number of dataset
+        dataHeaderIn = data.header
+        dataTypeIn=data.data_type
     #calculate
     if "calculate" in controlFlag:
         p = preCal.d_apyori_preCal(dataIn, dataHeaderIn, distFunc, dataTypeIn)
         p.preCal_1item()
         #argument flowing are similiar with ones in apriori by not the same,espetially in the value
-        minSupport = iter([0.06,0.0006,0.0005])#number of minsupport equals to (ItemNumberLimit+1),value decrease
+        minSupport = iter([0.005,0.009,0.3,0.4,0.00001])#number of minsupport equals to (ItemNumberLimit+2),[  ,   ,   ,filterMinSuppport]
+        #minSupport = iter([0.00001,0.00001,0.00001,0.00001,0.00001,0.00001])
         minConfidence = 0
-        ItemNumberLimit=2
+        ItemNumberLimit=3
         rules = runApriori(p.data, p, minSupport, minConfidence,itemNumberLimit=ItemNumberLimit)
         #     - rules ((pretuple, posttuple),support, confidence, lift)
 
@@ -103,3 +99,5 @@ if __name__=="__main__":
         rc.savePickle(rc.rules)
         for rule in rc.rules:
             rc.showFeatureName(rule)
+        print("number of rules: "+str(len(rc.rules)))
+        print("cost time:",time.time())

@@ -38,11 +38,14 @@ class d_apyori_preCal:
         time_t=time.time()
         if mode == 'insolate' or mode == 'atom':
             se_t_2 = deepcopy(se_t)
-            for i in se_t:
+            for i in range(len(se_t)):
                 dl = list()
-                for r in se_t_2:
-                    dl.append(distFuncIn(r, i))
-                self.pre_1item[tid][i] = pd.Series(dl)
+                for r in range(len(se_t_2)):
+                    if r!=i:
+                        dl.append(distFuncIn(se_t_2[r], se_t[i]))
+                    else:
+                        dl.append(0)
+                self.pre_1item[tid][(se_t[i],)] = pd.Series(dl)
         elif mode == 'linked':
             for i in se_t:
                 dl = list()

@@ -242,9 +242,20 @@ class d_apyori_cookDataSet:
         if self.d_data == None:
             raise Exception('have no data set normalized')
 
-    def chooseRow(self,row):
-        ##TODO to filter the needed data from d_data
-        pass
+    def chooseRow(self,data,chosedRow):
+        dataIn = list()
+        dataHeaderIn = list()
+        dataTypeIn = list()
+        for line in data.d_data:
+            l = list()
+            for i in chosedRow:
+                l.append(line[i])
+            dataIn.append(l)
+        for i in chosedRow:
+            dataHeaderIn.append(data.header[i])
+            dataTypeIn.append(data.data_type[i])
+        return dataIn,dataHeaderIn,dataTypeIn
+
 
 def plotFunc(func,title=None,scale='single'):
     if scale == 'single':
