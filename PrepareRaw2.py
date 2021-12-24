@@ -44,13 +44,13 @@ def plotFunc(funcs,title):
         i+=1
 
 if __name__=="__main__":
-    time=time.time()
+    startTime=time.time()
     controlFlag=list()
     #controlFlag.append("plotData")
     #controlFlag.append("plotFunc")
 
     controlFlag.append("chooseRow")
-    chosedRow=[0,1,2,3,4,5,6,7,8,9]
+    chosedRow=[0,1,2,5,6,7,8,9]   #increase
 
     controlFlag.append("calculate")
 
@@ -66,27 +66,31 @@ if __name__=="__main__":
     #generate and plot the distant func
 
     func_tid = data.create_rTOx_DistanceFunc(raw_func='l_sigmoid', section_pick=[-30, 30])
-    distFunc = [data.distanceFuncList[func_tid], ] * len(data.header)
+    distFuncAll = [data.distanceFuncList[func_tid], ] * len(data.header)
 
     if "plotFunc" in controlFlag:
-        plotFunc(distFunc,data.header)
+        plotFunc(distFuncAll,data.header)
 
     if "chooseRow" in controlFlag:
         dataIn,dataHeaderIn,dataTypeIn=data.chooseRow(data,chosedRow=chosedRow)
         dataIn = dataIn[0:300]  # change here if need to control the line number of dataset
+        distFuncIn=list()
+        for x in chosedRow:
+            distFuncIn.append(distFuncAll[x])
     else:
         dataIn = data.d_data
         #dataIn=dataIn[0:20]    #change here if need to control the line number of dataset
         dataHeaderIn = data.header
         dataTypeIn=data.data_type
+        distFuncIn=distFuncAll
     #calculate
     if "calculate" in controlFlag:
-        p = preCal.d_apyori_preCal(dataIn, dataHeaderIn, distFunc, dataTypeIn)
+        p = preCal.d_apyori_preCal(dataIn, dataHeaderIn, distFuncIn, dataTypeIn)
         p.preCal_1item()
         #argument flowing are similiar with ones in apriori by not the same,espetially in the value
-        minSupport = iter([0.005,0.009,0.3,0.4,0.00001])#number of minsupport equals to (ItemNumberLimit+2),[  ,   ,   ,filterMinSuppport]
+        minSupport = iter([0.3,0.25,0.25,0.0001])#number of minsupport equals to (ItemNumberLimit+1),[  ,   ,   ,filterMinSuppport]
         #minSupport = iter([0.00001,0.00001,0.00001,0.00001,0.00001,0.00001])
-        minConfidence = 0
+        minConfidence = 0.00001
         ItemNumberLimit=3
         rules = runApriori(p.data, p, minSupport, minConfidence,itemNumberLimit=ItemNumberLimit)
         #     - rules ((pretuple, posttuple),support, confidence, lift)
@@ -94,10 +98,10 @@ if __name__=="__main__":
         if rules==list():
             print("rules not found")
     ##TODO filter the useful rules
-        rc=ar.rules(data.header)
-        rc.addRules(rules)
-        rc.savePickle(rc.rules)
+        rc=ar.rules(data.header)                #total header to generate class
+        rc.addRules(rules,dataHeaderIn)         #header of chosen feature
+        rc.savePickle(rc.rules,dataHeaderIn)
         for rule in rc.rules:
-            rc.showFeatureName(rule)
+            rc.showFeatureName(rule,rc.totalHeader)
         print("number of rules: "+str(len(rc.rules)))
-        print("cost time:",time.time())
+        print("cost time:",int(time.time()-startTime))

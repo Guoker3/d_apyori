@@ -44,6 +44,7 @@ def returnItemsWithMinSupport(itemSet, pClass, minSupport, freqSet):
     """
     _itemSet = set()
     if np.array([x !='atom' for x in pClass.mode]).all():
+        inSupportCount=0
         for items in itemSet:
             itemSet_iter=iter(items)
             item=itemSet_iter.__next__()
@@ -54,6 +55,8 @@ def returnItemsWithMinSupport(itemSet, pClass, minSupport, freqSet):
             if support >=minSupport:
                 _itemSet.add(items)
                 freqSet[items] = support
+                inSupportCount+=1
+        print("number of items accord support: ",inSupportCount)
     else:
         for items in itemSet:
             itemSet_iter = iter(items)
@@ -72,12 +75,15 @@ def returnItemsWithMinSupport_1itemLoop(itemSet, minSupport,freqSet,pre):
    of the itemSet each of whose elements satisfies the minimum support"""
     _itemSet = set()
     if np.array([x !='atom' for x in pre.mode]).all():
+        inSupportCount=0
         for item in itemSet:
             f_item=list(item)[0]
             support = sum(pre.pre_1item[int((f_item+1)/3)][(f_item,)]) / pre.data_inf['row_number']
             if support >= minSupport:
                 _itemSet.add(item)
                 freqSet[item] = support
+                inSupportCount+=1
+        print("number of items accord support: ",inSupportCount)
     else:
         for item in itemSet:
             support = sum(pre.pre_1item_uni_dict[list(item)[0]]) / pre.data_inf['row_number']
@@ -150,6 +156,7 @@ def runApriori(data_iter,preClass, minSupports, minConfidence, minLift=0,itemNum
 
     oneCSet,freqSet = returnItemsWithMinSupport_1itemLoop(itemSet,minSupport,freqSet,preClass)
     currentLSet = oneCSet
+    print("")
 
     k = 2
     while ((currentLSet != set([])) and k < preClass.data_inf['column_number']+2):
@@ -165,12 +172,13 @@ def runApriori(data_iter,preClass, minSupports, minConfidence, minLift=0,itemNum
         currentCSet= returnItemsWithMinSupport(currentLSet, preClass, minSupport, freqSet)
         currentLSet = currentCSet
         k = k + 1
+        print("")
 
     print('calculate completed screening......')
 
     def getSupport(item):
         """local function which Returns the support of an item"""
-        return freqSet[item] / preClass.data_inf['row_number']
+        return freqSet[item]    #/ preClass.data_inf['row_number']
 
     toRetRules = []
     if type(minSupports) == type(iter([0, ])):

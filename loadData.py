@@ -243,18 +243,25 @@ class d_apyori_cookDataSet:
             raise Exception('have no data set normalized')
 
     def chooseRow(self,data,chosedRow):
-        dataIn = list()
-        dataHeaderIn = list()
-        dataTypeIn = list()
-        for line in data.d_data:
+        dataOut = list()
+        dataHeaderOut = list()
+        dataTypeOut = list()
+        for line in data.r_data:
             l = list()
             for i in chosedRow:
                 l.append(line[i])
-            dataIn.append(l)
+            dataOut.append(l)
         for i in chosedRow:
-            dataHeaderIn.append(data.header[i])
-            dataTypeIn.append(data.data_type[i])
-        return dataIn,dataHeaderIn,dataTypeIn
+            dataHeaderOut.append(data.header[i])
+            dataTypeOut.append(data.data_type[i])
+        dataChild=d_apyori_cookDataSet()
+        dataChild.r_data=dataOut
+        dataChild.header=dataHeaderOut
+        dataChild.data_type=dataTypeOut
+        dataChild.normalization()
+        dataChild.division()
+        dataOut=dataChild.d_data
+        return dataOut,dataHeaderOut,dataTypeOut
 
 
 def plotFunc(func,title=None,scale='single'):
