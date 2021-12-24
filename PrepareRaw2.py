@@ -3,6 +3,7 @@ import pandas as pd
 from distanceMode_apriori import *
 from matplotlib import pyplot as plt
 import copy
+import aprioriRule as ar
 def createDataset(name):
     data=ld.d_apyori_cookDataSet()
     data.loadDataSet(name,haveHeader=True)
@@ -33,7 +34,7 @@ def  plotData(data,ignoreBorder=False):
         plt.title(data.header[i])
         i+=1
         plt.show()
-
+2
 def plotFunc(funcs,title):
     i=0
     for fun in funcs:
@@ -43,12 +44,12 @@ def plotFunc(funcs,title):
 if __name__=="__main__":
     controlFlag=list()
     #controlFlag.append("plotData")
-    controlFlag.append("plotFunc")
+    #controlFlag.append("plotFunc")
 
-    #controlFlag.append("chooseRow")
-    #chosedRow=[0,1,2,3,4]
+    controlFlag.append("chooseRow")
+    chosedRow=[0,1,2,3,4,5,6,7,8,9]
 
-    #controlFlag.append("calculate")
+    controlFlag.append("calculate")
 
 
     #used to deal with "***Raw2***.csv"
@@ -61,7 +62,7 @@ if __name__=="__main__":
 
     #generate and plot the distant func
 
-    func_tid = data.create_rTOx_DistanceFunc(raw_func='l_sigmoid', section_pick=[-100, 100])
+    func_tid = data.create_rTOx_DistanceFunc(raw_func='l_sigmoid', section_pick=[-30, 30])
     distFunc = [data.distanceFuncList[func_tid], ] * len(data.header)
 
     if "plotFunc" in controlFlag:
@@ -85,17 +86,20 @@ if __name__=="__main__":
 
     #calculate
     if "calculate" in controlFlag:
-        p = preCal.d_apyori_preCal(dataIn[0:10], dataHeaderIn, distFunc, dataTypeIn)
+        p = preCal.d_apyori_preCal(dataIn, dataHeaderIn, distFunc, dataTypeIn)
         p.preCal_1item()
         #argument flowing are similiar with ones in apriori by not the same,espetially in the value
-        minSupport = 0.01
+        minSupport = iter([0.06,0.0006,0.0005])#number of minsupport equals to (ItemNumberLimit+1),value decrease
         minConfidence = 0
-        NumberLimit=2
-        rules = runApriori(p.data, p, minSupport, minConfidence,itemNumberLimit=NumberLimit)
+        ItemNumberLimit=2
+        rules = runApriori(p.data, p, minSupport, minConfidence,itemNumberLimit=ItemNumberLimit)
         #     - rules ((pretuple, posttuple),support, confidence, lift)
 
         if rules==list():
             print("rules not found")
     ##TODO filter the useful rules
-        for i in rules:
-            print(i)
+        rc=ar.rules(data.header)
+        rc.addRules(rules)
+        rc.savePickle(rc.rules)
+        for rule in rc.rules:
+            rc.showFeatureName(rule)

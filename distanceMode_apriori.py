@@ -130,13 +130,19 @@ def getItemSetTransactionList(data_iterator):
     return itemSet, transactionList
 
 
-def runApriori(data_iter,preClass, minSupport, minConfidence, minLift=0,itemNumberLimit=-1):
+def runApriori(data_iter,preClass, minSupports, minConfidence, minLift=0,itemNumberLimit=-1):
     """
     run the apriori algorithm. data_iter is a record iterator
     Return both:
      - items (tuple, support)
      - rules ((pretuple, posttuple), confidence)
     """
+    #can use iterator to adjustment the minsupport to reduce the calculate
+    if type(minSupports)==type(iter([0,])):
+        minSupport=next(minSupports)
+        print("minSupport: ", minSupport)
+    else:
+        minSupport=minSupports
     itemSet = [frozenset([x,]) for y in data_iter.values.tolist() for x in y]
     #freqSet = defaultdict(int)
     freqSet = dict()
@@ -146,13 +152,16 @@ def runApriori(data_iter,preClass, minSupport, minConfidence, minLift=0,itemNumb
     currentLSet = oneCSet
 
     k = 2
-    while ((currentLSet != set([])) and k < preClass.data_inf['column_number']):
+    while ((currentLSet != set([])) and k < preClass.data_inf['column_number']+2):
         if k==itemNumberLimit+2:
             break
         print('itemSet number : ',k)
         largeSet[k - 1] = currentLSet
         currentLSet = joinSet(currentLSet, k,preClass)
         print('itemset length ',k,' has',len(currentLSet),' items')
+        if type(minSupports) == type(iter([0,])):
+            minSupport = next(minSupports)
+            print("minSupport: ",minSupport)
         currentCSet = returnItemsWithMinSupport(currentLSet, preClass, minSupport, freqSet)
         currentLSet = currentCSet
         k = k + 1
@@ -175,11 +184,14 @@ def runApriori(data_iter,preClass, minSupport, minConfidence, minLift=0,itemNumb
                     # lift = getSupport(item)/( getSupport(element) * getSupport(remain))
                     lift = confidence / getSupport(remain)
                     self_support = getSupport(item)
+                    print("\r\tin time support: "+str(self_support),end="")
+                    #make breakpoint here to check the proper paramater
                     if self_support >= minSupport:
                         if confidence >= minConfidence:
                             if confidence >= minLift:
                                 toRetRules.append(((tuple(element), tuple(remain)),
                                                    self_support, confidence, lift))
+    print("")
     return toRetRules
 
 if __name__ == "__main__":
@@ -204,9 +216,10 @@ if __name__ == "__main__":
     p.preCal_1item()
     ##TODO(important speed) make a list of minSupport to deal with items-boommm
     ##TODO(importtant development) make minsupport-threhold be a relative thing.
-    minSupport = 0
+    minSupport = 0.00001
     minConfidence = 0
-    rules = runApriori(p.data, p, minSupport, minConfidence)
+    itemNumberLimit = -1
+    rules = runApriori(p.data, p, minSupport, minConfidence,itemNumberLimit=itemNumberLimit)
     #     - items (tuple, support)
     #     - rules ((pretuple, posttuple),support, confidence, lift)
 
