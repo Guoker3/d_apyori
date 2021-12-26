@@ -29,7 +29,7 @@ class rules:
         for ruleIn in rulesIn:
             self.addRule(ruleIn,header)
 
-    def searchRules(self,filterDict):
+    def filterRules(self,filterDict):
         retRules=list()
         for rule in self.rules:
             flag=True
@@ -47,12 +47,23 @@ class rules:
                 retRules.append(rule)
         return retRules
 
-    def sortRules(self,sortDict):
-        pass
+    def sortRules(self,rules,amount,key="confidence"):
+        if key =="confidence":
+            sRules=sorted(rules, key=lambda rule: rule[2],reverse=True)
+        if amount>len(rules):
+            amount=len(rules)
+        return sRules[0:amount]
 
-    def searchFeature(self):
-        pass
-
+    def searchFeatureLeft(self,featuresLeft):
+        retRules=list()
+        for rule in self.rules:
+            flag = False
+            for i in list(rule[0][0]):
+                if self.totalHeader[int(i / 3)] in featuresLeft:
+                    flag=True
+            if flag:
+                retRules.append(rule)
+        return retRules
     def showFeatureName(self,rule,header):
         ii = [[header[int(x / 3)] + ": " + str(x) for x in list(rule[0][0])],[header[int(x / 3)] + ": " + str(x) for x in list(rule[0][1])], rule[1], rule[2], rule[3]]
         print(ii)
@@ -68,13 +79,19 @@ class rules:
                 print("save in: "+"../dataset/"+name +".pickle")
 
     def addRulesFromPickle(self,name):
-        with open("../dataset"+name, 'wb') as f:
+        with open("../dataset/"+name+".pickle", 'rb') as f:
             pk=pickle.load(f)
             rules=pk[0]
             header=pk[1]
             for rule in rules:
-                self.addRule(rule,header)
+                self.addRule(rule,self.totalHeader)
 
 if __name__=="__main__":
-    rl=rules()
-    rl.addRulesFromPickle("rule5352")
+    allHeaders=["embeddedDepth","lineNumber","imgWidth","imgHeight","widthHeightRatio","red","green","blue","colorVariety","contrast","levelDistanceLowRatio","levelDistanceHighRatio","levelSimiliarDistanceLowRatio","levelSimiliarDistanceHighRatio","verticalZeroRatio","verticalMinusRatio","verticalPositiveRatio","verticalSimiliarZeroRatio","verticalSimiliarMinusRatio","verticalSimiliarPositiveRatio","horizonDistanceCloserRatio","horizonDistanceFatherRatio","horizonDistanceInFoundLevelCloserRatio","horizonDistanceInFoundLevelFatherRatio","childNumber","childTagNumber","siblingNumber","siblingTagNumber","uncleNumber","uncleTagNumber"]
+    rl=rules(allHeaders)
+    rl.addRulesFromPickle("rules_LnCv")
+    rl.addRulesFromPickle("rules_EdCt")
+    #for rule in rl.rules:
+    fr=rl.searchFeatureLeft("colorVariety")
+    for rule in rl.sortRules(fr,10):
+        print(rl.showFeatureName(rule,allHeaders))

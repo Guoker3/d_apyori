@@ -36,7 +36,7 @@ def  plotData(data,ignoreBorder=False):
         plt.title(data.header[i])
         i+=1
         plt.show()
-2
+
 def plotFunc(funcs,title):
     i=0
     for fun in funcs:
@@ -50,7 +50,7 @@ if __name__=="__main__":
     #controlFlag.append("plotFunc")
 
     controlFlag.append("chooseRow")
-    chosedRow=[0,1,2,5,6,7,8,9]   #increase
+    chosedRow=[0,9]   #increase
 
     controlFlag.append("calculate")
 
@@ -88,7 +88,7 @@ if __name__=="__main__":
         p = preCal.d_apyori_preCal(dataIn, dataHeaderIn, distFuncIn, dataTypeIn)
         p.preCal_1item()
         #argument flowing are similiar with ones in apriori by not the same,espetially in the value
-        minSupport = iter([0.3,0.25,0.25,0.0001])#number of minsupport equals to (ItemNumberLimit+1),[  ,   ,   ,filterMinSuppport]
+        minSupport = iter([0.1,0.05,0.01,0.0001])#number of minsupport equals to (ItemNumberLimit+1),[  ,   ,   ,filterMinSuppport]
         #minSupport = iter([0.00001,0.00001,0.00001,0.00001,0.00001,0.00001])
         minConfidence = 0.00001
         ItemNumberLimit=3
