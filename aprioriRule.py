@@ -47,11 +47,19 @@ class rules:
                 retRules.append(rule)
         return retRules
 
-    def sortRules(self,rules,amount,key="confidence"):
+    def sortRules(self,rules,amount=-1,key="confidence"):
         if key =="confidence":
             sRules=sorted(rules, key=lambda rule: rule[2],reverse=True)
+        elif key =="support":
+            sRules=sorted(rules, key=lambda rule: rule[1],reverse=True)
+        elif key =="lift":
+            sRules=sorted(rules, key=lambda rule: rule[3],reverse=True)
+        else:
+            return None
         if amount>len(rules):
             amount=len(rules)
+        elif amount==-1:
+            return sRules
         return sRules[0:amount]
 
     def searchFeatureLeft(self,featuresLeft):
