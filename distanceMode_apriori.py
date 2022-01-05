@@ -60,10 +60,10 @@ def returnItemsWithMinSupport(itemSet, pClass, minSupport, freqSet):
     else:
         for items in itemSet:
             itemSet_iter = iter(items)
-            item = itemSet_iter.__next__()
+            item = (itemSet_iter.__next__(),)
             D = pClass.pre_1item_uni_dict[item]
             for item in itemSet_iter:
-                D = D * pClass.pre_1item_uni_dict[item]
+                D = D * pClass.pre_1item_uni_dict[(item,)]
             support = sum(D) / pClass.data_inf['row_number']
             if support >= minSupport:
                 _itemSet.add(items)
@@ -86,7 +86,9 @@ def returnItemsWithMinSupport_1itemLoop(itemSet, minSupport,freqSet,pre):
         print("number of items accord support: ",inSupportCount)
     else:
         for item in itemSet:
-            support = sum(pre.pre_1item_uni_dict[list(item)[0]]) / pre.data_inf['row_number']
+            #support = sum(pre.pre_1item_uni_dict[list(item)[0]]) / pre.data_inf['row_number']
+            f_item=(list(item)[0],)
+            support = sum(pre.pre_1item_uni_dict[f_item]) / pre.data_inf['row_number']
             if support >= minSupport:
                 freqSet[item] = support
                 _itemSet.add(item)
@@ -225,8 +227,8 @@ if __name__ == "__main__":
     p.preCal_1item()
     ##TODO(important speed) make a list of minSupport to deal with items-boommm
     ##TODO(importtant development) make minsupport-threhold be a relative thing.
-    minSupport = 0.00001
-    minConfidence = 0
+    minSupport = 0.0001
+    minConfidence = 0.0001
     itemNumberLimit = -1
     rules = runApriori(p.data, p, minSupport, minConfidence,itemNumberLimit=itemNumberLimit)
     #     - items (tuple, support)
